@@ -8,12 +8,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.Document.Entry;
 
 /**
  * @author nilsdijk
  *
  */
-public class Memtable implements Collection {
+public class Memtable extends Collection {
 	
 	private final Map<UUID, Document> docs = new TreeMap<UUID, Document>();
 	private final ReadWriteLock rwl = new ReentrantReadWriteLock();
@@ -74,5 +75,14 @@ public class Memtable implements Collection {
 			this.rwl.readLock().unlock();
 		}
 	}
-
+	
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		for (Document.Entry e:this){
+			if (sb.length() > 0)
+				sb.append('\n');
+			sb.append(e);
+		}
+		return sb.toString();
+	}
 }

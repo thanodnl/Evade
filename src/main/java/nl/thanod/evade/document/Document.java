@@ -10,12 +10,23 @@ import java.util.*;
  */
 public abstract class Document {
 	public static class Entry {
+		public static Comparator<Entry> COMPARATOR = new Comparator<Document.Entry>() {
+			@Override
+			public int compare(Entry o1, Entry o2) {
+				return o1.id.compareTo(o2.id);
+			}
+		};
+		
 		public final UUID id;
 		public final Document doc;
 
 		public Entry(UUID id, Document doc) {
 			this.id = id;
 			this.doc = doc;
+		}
+		
+		public String toString(){
+			return this.id + ":" + this.doc;
 		}
 	}
 

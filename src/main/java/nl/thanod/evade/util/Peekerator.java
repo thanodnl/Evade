@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.util;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -10,6 +11,24 @@ import java.util.NoSuchElementException;
  * @author nilsdijk
  */
 public class Peekerator<E> implements Iterator<E> {
+	
+	public static class Sorter<E> implements Comparator<Peekerator<E>> {
+		
+		private final Comparator<E> comp;
+		
+		public Sorter(Comparator<E> comp){
+			this.comp = comp;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+		 */
+		@Override
+		public int compare(Peekerator<E> o1, Peekerator<E> o2) {
+			return comp.compare(o1.peek(), o2.peek());
+		}
+		
+	}
 
 	private final Iterator<E> it;
 	private E peek;

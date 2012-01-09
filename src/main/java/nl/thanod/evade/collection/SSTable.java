@@ -14,7 +14,7 @@ import nl.thanod.evade.document.Document.Entry;
  * @author nilsdijk
  *
  */
-public class SSTable implements Collection {
+public class SSTable extends Collection {
 
 	public SSTable(File file){
 		
