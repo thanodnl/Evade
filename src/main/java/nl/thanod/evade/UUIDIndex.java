@@ -16,7 +16,7 @@ import nl.thanod.evade.UUIDIndex.Entry;
  * @author nilsdijk
  */
 public class UUIDIndex {
-	public static Random RANDY = new Random(System.currentTimeMillis());
+	public static Random RANDY = new Random();
 
 	public static final int COUNT = 1000000;
 	private final MappedByteBuffer buffer;
