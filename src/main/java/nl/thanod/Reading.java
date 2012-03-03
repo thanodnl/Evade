@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import nl.thanod.evade.collection.Collection;
 import nl.thanod.evade.collection.SSTable;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.util.Documenter;
@@ -19,9 +20,10 @@ public class Reading
 {
 	public static void main(String... args) throws IOException
 	{
-//		File f = new File("data", "out98.sstable");
-//		SSTable ss = new SSTable(f);
-		measureReading(getAll());
+		File f = new File("data", "out97.sstable");
+		SSTable ss = new SSTable(f);
+		measureReading(ss);
+		containsTest(ss);
 	}
 
 	public static Documenter getAll() throws IOException
@@ -51,5 +53,14 @@ public class Reading
 		float took = (System.nanoTime() - start) / 1000000f;
 		System.out.println("took: " + took + "ms");
 		System.out.println(c);
+	}
+
+	public static void containsTest(Collection c)
+	{
+		for (Document.Entry e : c) {
+			if (!c.contains(e.id)) {
+				System.err.println("id: " + e.id + " is contained but not reporting correctly");
+			}
+		}
 	}
 }

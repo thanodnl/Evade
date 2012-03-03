@@ -89,6 +89,8 @@ public class SSTable extends Collection
 					max = mid - 1;
 				}
 			} while (min < max);
+			if (min == max)
+				p = get(min);
 			return p;
 		}
 
@@ -103,17 +105,6 @@ public class SSTable extends Collection
 				p = p2;
 			}
 		}
-
-		/**
-		 * @param id
-		 * @return
-		 */
-		public boolean contains(UUID id)
-		{
-			//TODO save the min and max id to see if it is within range
-			// should be a fast test for compacted datasets
-			return before(id).id.equals(id);
-		}
 	}
 
 	private static final File DATA_DIR = new File("data");
@@ -121,14 +112,17 @@ public class SSTable extends Collection
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	private final File file;
-	
+
 	protected final Index index;
 	private final MappedByteBuffer datamap;
+
+	private final UUID min;
+	private final UUID max;
 
 	public SSTable(File file) throws IOException
 	{
 		this.file = file;
-		
+
 		FileInputStream fin = new FileInputStream(file);
 		FileChannel ch = fin.getChannel();
 		ch.position(ch.size() - 4);
@@ -139,7 +133,10 @@ public class SSTable extends Collection
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
 		index = new Index(ch.map(MapMode.READ_ONLY, indexstart, ch.size() - indexstart - 4));
-		
+
+		this.min = this.index.get(0).id;
+		this.max = this.index.get(this.index.count() - 1).id;
+
 		// the beginning of the file to the start of the index is the datapart of the file
 		datamap = ch.map(MapMode.READ_ONLY, 0, indexstart);
 	}
@@ -151,7 +148,9 @@ public class SSTable extends Collection
 	@Override
 	public boolean contains(UUID id)
 	{
-		return this.index.contains(id);//before(id).id.equals(id);
+		if (this.min.compareTo(id) > 0 || this.max.compareTo(id) < 0)
+			return false;
+		return this.index.before(id).id.equals(id);
 	}
 
 	/*
@@ -251,7 +250,8 @@ public class SSTable extends Collection
 		return files;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see nl.thanod.evade.collection.Collection#size()
 	 */
 	@Override

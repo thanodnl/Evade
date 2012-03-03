@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.document;
 
+
 /**
  * @author nilsdijk
  */
@@ -37,5 +38,4 @@ public class StringDocument extends Document
 		StringDocument thats = (StringDocument) that;
 		return this.value.equals(thats.value);
 	}
-
 }
