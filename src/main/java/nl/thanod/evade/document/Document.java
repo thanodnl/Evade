@@ -95,14 +95,28 @@ public abstract class Document
 	}
 
 	@Override
-	public boolean equals(Object that)
+	public int hashCode()
 	{
-		if (!(that instanceof Document))
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		result = prime * result + (int) (version ^ (version >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
 			return false;
-		Document thatbase = (Document) that;
-		if (this.version != thatbase.version)
+		if (getClass() != obj.getClass())
 			return false;
-		if (this.type != thatbase.type)
+		Document other = (Document) obj;
+		if (type != other.type)
+			return false;
+		if (version != other.version)
 			return false;
 		return true;
 	}

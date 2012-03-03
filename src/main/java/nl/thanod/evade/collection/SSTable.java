@@ -13,7 +13,6 @@ import nl.thanod.evade.collection.SSTable.Index.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
-import nl.thanod.evade.document.DocumentSerializer;
 import nl.thanod.evade.util.ByteBufferInputStream;
 import nl.thanod.evade.util.CountingOutputStream;
 import nl.thanod.evade.util.Generator;
@@ -112,7 +111,7 @@ public class SSTable extends Collection
 	private static final int DEF_DATA_SIZE = 64 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
-	private final File file;
+	public final File file;
 
 	protected final Index index;
 	private final MappedByteBuffer datamap;

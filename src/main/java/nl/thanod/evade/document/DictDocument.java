@@ -64,15 +64,33 @@ public class DictDocument extends Document
 	}
 
 	@Override
-	public boolean equals(Object that)
+	public int hashCode()
 	{
-		if (!super.equals(that))
-			return false;
-		if (!(that instanceof DictDocument))
-			return false;
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (clearedOn ^ (clearedOn >>> 32));
+		result = prime * result + ((data == null) ? 0 : data.hashCode());
+		return result;
+	}
 
-		DictDocument thatdoc = (DictDocument) that;
-		return this.clearedOn == thatdoc.clearedOn && this.data.equals(thatdoc.data);
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DictDocument other = (DictDocument) obj;
+		if (clearedOn != other.clearedOn)
+			return false;
+		if (data == null) {
+			if (other.data != null)
+				return false;
+		} else if (!data.equals(other.data))
+			return false;
+		return true;
 	}
 
 	public DictDocument clearOn(long version)

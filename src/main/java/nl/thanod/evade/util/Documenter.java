@@ -5,10 +5,8 @@ package nl.thanod.evade.util;
 
 import java.util.*;
 
-import nl.thanod.evade.collection.Memtable;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
-import nl.thanod.evade.document.DocumentBuilder;
 
 /**
  * @author nilsdijk
@@ -79,49 +77,5 @@ public class Documenter implements Iterable<Document.Entry>
 				return new Document.Entry(v.id, doc);
 			}
 		};
-	}
-
-	public static void main(String... args)
-	{
-		Memtable m1 = new Memtable();
-		Memtable m2 = new Memtable();
-		Memtable m3 = new Memtable();
-
-		UUID id1 = UUID.randomUUID();
-		Document doc1 = DocumentBuilder.start(1).put("name", "nils").put("age", 23).make();
-		m1.update(id1, doc1);
-
-		doc1 = DocumentBuilder.start(2).put("age", 24).make();
-		m2.update(id1, doc1);
-
-		UUID id2 = UUID.randomUUID();
-		Document doc2 = DocumentBuilder.start(1).put("name", "koen").put("age", 24).make();
-		m1.update(id2, doc2);
-
-		doc2 = DocumentBuilder.start(2).put("age", 26).make();
-		m3.update(id2, doc2);
-
-		UUID id3 = UUID.randomUUID();
-		Document doc3 = DocumentBuilder.start(1).put("name", "sam").put("age", 25).make();
-		m1.update(id3, doc3);
-
-		doc3 = DocumentBuilder.start(2).put("chair", "wheel").make();
-		m2.update(id3, doc3);
-
-		doc3 = DocumentBuilder.start(2).put("hair", "black").make();
-		m3.update(id3, doc3);
-
-		System.out.println(m1);
-		System.out.println("-----------");
-		System.out.println(m2);
-		System.out.println("-----------");
-		System.out.println(m3);
-		System.out.println("-----------");
-
-		Memtable r = new Memtable();
-		for (Document.Entry e : new Documenter(m1, m2, m3)) {
-			r.update(e.id, e.doc);
-		}
-		System.out.println(r);
 	}
 }

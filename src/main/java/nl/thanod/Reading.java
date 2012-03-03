@@ -48,7 +48,7 @@ public class Reading
 		long start = System.nanoTime();
 		for (Document.Entry e : ss) {
 			c++;
-			//			System.out.println(e);
+//			System.out.println(e);
 		}
 		float took = (System.nanoTime() - start) / 1000000f;
 		System.out.println("took: " + took + "ms");
