@@ -18,6 +18,12 @@ public class Documenter implements Iterable<Document.Entry>
 
 	private final ArrayList<Iterable<Entry>> documentcontainers;
 
+	public Documenter(Collection<? extends Iterable<Document.Entry>> input)
+	{
+		this.documentcontainers = new ArrayList<Iterable<Document.Entry>>(input.size());
+		this.documentcontainers.addAll(input);
+	}
+
 	public Documenter(Iterable<Document.Entry>... input)
 	{
 		this.documentcontainers = new ArrayList<Iterable<Document.Entry>>();

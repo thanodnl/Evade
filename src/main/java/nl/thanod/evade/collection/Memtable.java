@@ -8,7 +8,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.Document.Entry;
 
 /**
  * @author nilsdijk
@@ -92,5 +91,15 @@ public class Memtable extends Collection
 			sb.append(e);
 		}
 		return sb.toString();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#count()
+	 */
+	@Override
+	public int size()
+	{
+		return this.docs.size();
 	}
 }
