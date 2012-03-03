@@ -12,9 +12,11 @@ import java.util.TreeMap;
 /**
  * @author nilsdijk
  */
-public class DocumentSerializer {
+public class DocumentSerializer
+{
 
-	public static Document deserialize(DataInputStream stream) throws IOException {
+	public static Document deserialize(DataInputStream stream) throws IOException
+	{
 		long version = stream.readLong();
 		int code = stream.read();
 		Document.Type type = Document.Type.getByCode(code);
@@ -34,9 +36,10 @@ public class DocumentSerializer {
 	 * @param stream
 	 * @param version
 	 * @return
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	private static Document deserializeStringValue(DataInputStream stream, long version) throws IOException {
+	private static Document deserializeStringValue(DataInputStream stream, long version) throws IOException
+	{
 		byte[] bytes = new byte[16];
 		int index = 0;
 		int c = stream.read();
@@ -55,7 +58,8 @@ public class DocumentSerializer {
 	 * @return
 	 * @throws IOException
 	 */
-	private static DictDocument deserializeDocument(DataInputStream stream, long version) throws IOException {
+	private static DictDocument deserializeDocument(DataInputStream stream, long version) throws IOException
+	{
 		int cont = stream.read();
 		Map<String, Document> map = new TreeMap<String, Document>();
 		while (cont == 0xFF) {
@@ -64,7 +68,7 @@ public class DocumentSerializer {
 			map.put(key, value);
 			cont = stream.read();
 		}
-		DictDocument doc = new DictDocument(map,false);
+		DictDocument doc = new DictDocument(map, false);
 		return doc;
 	}
 
@@ -73,7 +77,8 @@ public class DocumentSerializer {
 	 * @return
 	 * @throws IOException
 	 */
-	private static String deserializeString(DataInputStream stream) throws IOException {
+	private static String deserializeString(DataInputStream stream) throws IOException
+	{
 		byte[] bytes = new byte[16];
 		int index = 0;
 		int c = stream.read();
@@ -86,7 +91,8 @@ public class DocumentSerializer {
 		return new String(bytes, 0, index);
 	}
 
-	public static int serialize(DataOutputStream stream, Document base) throws IOException {
+	public static int serialize(DataOutputStream stream, Document base) throws IOException
+	{
 		int size = 0;
 		stream.writeLong(base.version);
 		size += 8;
@@ -110,7 +116,8 @@ public class DocumentSerializer {
 	 * @return
 	 * @throws IOException
 	 */
-	private static int serializeStringValue(DataOutputStream stream, StringDocument base) throws IOException {
+	private static int serializeStringValue(DataOutputStream stream, StringDocument base) throws IOException
+	{
 		byte[] b = base.value.getBytes(Charset.forName("UTF8"));
 		stream.write(b);
 		stream.write(0x00);
@@ -123,7 +130,8 @@ public class DocumentSerializer {
 	 * @return
 	 * @throws IOException
 	 */
-	private static int serializeDocument(DataOutputStream stream, DictDocument base) throws IOException {
+	private static int serializeDocument(DataOutputStream stream, DictDocument base) throws IOException
+	{
 		int size = 0;
 		for (Map.Entry<String, Document> e : base.entrySet()) {
 			stream.write(0xFF);
@@ -142,23 +150,25 @@ public class DocumentSerializer {
 	 * @return
 	 * @throws IOException
 	 */
-	private static int serializeString(DataOutputStream stream, String key) throws IOException {
+	private static int serializeString(DataOutputStream stream, String key) throws IOException
+	{
 		byte[] b = key.getBytes(Charset.forName("UTF8"));
 		stream.write(b);
 		stream.write(0x00);
 		return b.length + 1;
 	}
-	
-	public static void main(String... args) throws IOException {
-		DictDocument doc = DocumentBuilder.start(123).put("name", "Klaas Jan Pietje").tree("props").put("age", "24").put("gender","male").make();
+
+	public static void main(String... args) throws IOException
+	{
+		DictDocument doc = DocumentBuilder.start(123).put("name", "Klaas Jan Pietje").tree("props").put("age", "24").put("gender", "male").make();
 		System.out.println(doc);
-		
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int length = serialize(new DataOutputStream(baos), doc);
-		
+
 		byte[] bytes = baos.toByteArray();
 		System.out.println("lenght: " + length + " actual: " + bytes.length);
-		
+
 		Document read = deserialize(new DataInputStream(new ByteArrayInputStream(bytes)));
 		System.out.println(read);
 	}

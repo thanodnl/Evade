@@ -15,45 +15,54 @@ import nl.thanod.evade.UUIDIndex.Entry;
 /**
  * @author nilsdijk
  */
-public class UUIDIndex {
+public class UUIDIndex
+{
 	public static Random RANDY = new Random();
 
 	public static final int COUNT = 1000000;
 	private final MappedByteBuffer buffer;
 
-	public static class Entry {
+	public static class Entry
+	{
 		public final UUID uuid;
 		public final long position;
 
-		Entry(UUID uuid, long position) {
+		Entry(UUID uuid, long position)
+		{
 			this.uuid = uuid;
 			this.position = position;
 		}
 
 		@Override
-		public String toString() {
+		public String toString()
+		{
 			return uuid + ":" + this.position;
 		}
 	}
 
-	public UUIDIndex(File f) throws IOException {
+	public UUIDIndex(File f) throws IOException
+	{
 		FileChannel ch = new FileInputStream(f).getChannel();
 		this.buffer = ch.map(MapMode.READ_ONLY, 0, ch.size());
 	}
 
-	public int count() {
+	public int count()
+	{
 		return buffer.capacity() / 24;
 	}
 
-	public Entry getRandom() {
+	public Entry getRandom()
+	{
 		return get(RANDY.nextInt(count()));
 	}
 
-	public Entry find(UUID uuid) {
+	public Entry find(UUID uuid)
+	{
 		return doFind(uuid, 0, count());
 	}
 
-	private Entry doFind(UUID uuid, int min, int max) {
+	private Entry doFind(UUID uuid, int min, int max)
+	{
 		while (min <= max) {
 			int mid = (max - min) / 2 + min;
 			Entry found = get(mid);
@@ -74,13 +83,15 @@ public class UUIDIndex {
 	 * @param nextInt
 	 * @return
 	 */
-	public Entry get(int n) {
+	public Entry get(int n)
+	{
 		buffer.position(n * 24);
 		UUID id = new UUID(buffer.getLong(), buffer.getLong());
 		return new Entry(id, buffer.getLong());
 	}
 
-	public static void main(String... args) throws IOException {
+	public static void main(String... args) throws IOException
+	{
 		File f = new File("uuid.idx");
 		//		create(f);
 		//		System.out.println("created");
@@ -91,7 +102,8 @@ public class UUIDIndex {
 	 * @param f
 	 * @throws IOException
 	 */
-	private static void test(File f) throws IOException {
+	private static void test(File f) throws IOException
+	{
 		UUIDIndex index = new UUIDIndex(f);
 
 		findRandom(index);
@@ -116,13 +128,15 @@ public class UUIDIndex {
 	/**
 	 * @param index
 	 */
-	private static void findRandom(UUIDIndex index) {
+	private static void findRandom(UUIDIndex index)
+	{
 		Entry find = index.getRandom();
 		System.out.println(find);
 		findMe(index, find.uuid);
 	}
 
-	private static void findMe(UUIDIndex index, UUID id) {
+	private static void findMe(UUIDIndex index, UUID id)
+	{
 		long start = System.nanoTime();
 		Entry found = index.find(id);
 		long took = System.nanoTime() - start;
@@ -130,11 +144,13 @@ public class UUIDIndex {
 		System.out.println(took / 1000000.0 + "ms");
 	}
 
-	public Entry find(Entry find) {
+	public Entry find(Entry find)
+	{
 		return doFind(find.uuid, 0, count());
 	}
 
-	public static void create(File f) throws IOException {
+	public static void create(File f) throws IOException
+	{
 		FileOutputStream fos = new FileOutputStream(f);
 		DataOutputStream dos = new DataOutputStream(fos);
 

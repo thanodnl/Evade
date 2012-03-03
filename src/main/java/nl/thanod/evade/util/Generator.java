@@ -9,7 +9,8 @@ import java.util.NoSuchElementException;
 /**
  * @author nilsdijk
  */
-public abstract class Generator<E> implements Iterator<E> {
+public abstract class Generator<E> implements Iterator<E>
+{
 
 	private boolean next = false;
 	private E value;
@@ -19,7 +20,8 @@ public abstract class Generator<E> implements Iterator<E> {
 	 * @see java.util.Iterator#hasNext()
 	 */
 	@Override
-	public final boolean hasNext() {
+	public final boolean hasNext()
+	{
 		if (next)
 			return next;
 		try {
@@ -32,7 +34,8 @@ public abstract class Generator<E> implements Iterator<E> {
 	}
 
 	@Override
-	public final E next() {
+	public final E next()
+	{
 		if (hasNext())
 			return this.take();
 		else
@@ -42,7 +45,8 @@ public abstract class Generator<E> implements Iterator<E> {
 	/**
 	 * @return
 	 */
-	private E take() {
+	private E take()
+	{
 		if (!this.next)
 			throw new NoSuchElementException();
 		this.next = false;
@@ -56,7 +60,8 @@ public abstract class Generator<E> implements Iterator<E> {
 	 * @see java.util.Iterator#remove()
 	 */
 	@Override
-	public final void remove() {
+	public final void remove()
+	{
 		throw new UnsupportedOperationException();
 	}
 

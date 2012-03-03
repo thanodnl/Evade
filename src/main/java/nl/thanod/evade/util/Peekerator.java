@@ -10,35 +10,42 @@ import java.util.NoSuchElementException;
 /**
  * @author nilsdijk
  */
-public class Peekerator<E> implements Iterator<E> {
-	
-	public static class Sorter<E> implements Comparator<Peekerator<E>> {
-		
+public class Peekerator<E> implements Iterator<E>
+{
+
+	public static class Sorter<E> implements Comparator<Peekerator<E>>
+	{
+
 		private final Comparator<E> comp;
-		
-		public Sorter(Comparator<E> comp){
+
+		public Sorter(Comparator<E> comp)
+		{
 			this.comp = comp;
 		}
 
-		/* (non-Javadoc)
+		/*
+		 * (non-Javadoc)
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
 		@Override
-		public int compare(Peekerator<E> o1, Peekerator<E> o2) {
+		public int compare(Peekerator<E> o1, Peekerator<E> o2)
+		{
 			return comp.compare(o1.peek(), o2.peek());
 		}
-		
+
 	}
 
 	private final Iterator<E> it;
 	private E peek;
 	private boolean peeked;
 
-	public Peekerator(Iterator<E> it) {
+	public Peekerator(Iterator<E> it)
+	{
 		this.it = it;
 	}
 
-	public E peek() {
+	public E peek()
+	{
 		if (peeked)
 			return peek;
 		if (!it.hasNext())
@@ -53,7 +60,8 @@ public class Peekerator<E> implements Iterator<E> {
 	 * @see java.util.Iterator#hasNext()
 	 */
 	@Override
-	public boolean hasNext() {
+	public boolean hasNext()
+	{
 		return this.peeked || this.it.hasNext();
 	}
 
@@ -62,8 +70,9 @@ public class Peekerator<E> implements Iterator<E> {
 	 * @see java.util.Iterator#next()
 	 */
 	@Override
-	public E next() {
-		if (this.peeked){
+	public E next()
+	{
+		if (this.peeked) {
 			this.peeked = false;
 			return this.peek;
 		}
@@ -75,7 +84,8 @@ public class Peekerator<E> implements Iterator<E> {
 	 * @see java.util.Iterator#remove()
 	 */
 	@Override
-	public void remove() {
+	public void remove()
+	{
 		throw new UnsupportedOperationException();
 	}
 }

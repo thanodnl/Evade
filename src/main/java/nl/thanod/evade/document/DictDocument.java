@@ -11,24 +11,28 @@ import java.util.TreeMap;
 /**
  * @author nilsdijk
  */
-public class DictDocument extends Document {
+public class DictDocument extends Document
+{
 
 	private final Map<String, Document> data;
 
 	public final long clearedOn;
 
-	public DictDocument(Map<String, Document> entries) {
+	public DictDocument(Map<String, Document> entries)
+	{
 		this(entries, 0, true);
 	}
 
-	public DictDocument(Map<String, Document> data, boolean clone) {
+	public DictDocument(Map<String, Document> data, boolean clone)
+	{
 		this(data, 0, clone);
 	}
 
 	/**
 	 * @param version
 	 */
-	public DictDocument(Map<String, Document> data, long clearedOn, boolean clone) {
+	public DictDocument(Map<String, Document> data, long clearedOn, boolean clone)
+	{
 		super(Document.newestVersion(data.values()), Type.DOCUMENT);
 		this.clearedOn = clearedOn;
 		if (clone) {
@@ -40,24 +44,28 @@ public class DictDocument extends Document {
 		}
 	}
 
-	public Document get(String name) {
+	public Document get(String name)
+	{
 		return this.data.get(name);
 	}
 
 	@Override
-	public String toString() {
-		return "("+this.version + '/' + this.clearedOn +  ") " + this.data.toString();
+	public String toString()
+	{
+		return "(" + this.version + '/' + this.clearedOn + ") " + this.data.toString();
 	}
 
 	/**
 	 * @return
 	 */
-	public Set<Map.Entry<String, Document>> entrySet() {
+	public Set<Map.Entry<String, Document>> entrySet()
+	{
 		return Collections.unmodifiableSet(this.data.entrySet());
 	}
 
 	@Override
-	public boolean equals(Object that) {
+	public boolean equals(Object that)
+	{
 		if (!super.equals(that))
 			return false;
 		if (!(that instanceof DictDocument))
@@ -67,15 +75,16 @@ public class DictDocument extends Document {
 		return this.clearedOn == thatdoc.clearedOn && this.data.equals(thatdoc.data);
 	}
 
-	public DictDocument clearOn(long version) {
+	public DictDocument clearOn(long version)
+	{
 		if (version <= this.clearedOn)
 			return this;
 		Map<String, Document> map = new TreeMap<String, Document>();
-		for (Map.Entry<String, Document> e:this.data.entrySet()){
+		for (Map.Entry<String, Document> e : this.data.entrySet()) {
 			if (e.getValue().version < version)
 				continue;
 			if (e.getValue() instanceof DictDocument)
-				map.put(e.getKey(), ((DictDocument)e.getValue()).clearOn(version));
+				map.put(e.getKey(), ((DictDocument) e.getValue()).clearOn(version));
 			else
 				map.put(e.getKey(), e.getValue());
 		}

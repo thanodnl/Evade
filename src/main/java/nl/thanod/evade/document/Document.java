@@ -8,29 +8,35 @@ import java.util.*;
 /**
  * @author nilsdijk
  */
-public abstract class Document {
-	public static class Entry {
+public abstract class Document
+{
+	public static class Entry
+	{
 		public static Comparator<Entry> COMPARATOR = new Comparator<Document.Entry>() {
 			@Override
-			public int compare(Entry o1, Entry o2) {
+			public int compare(Entry o1, Entry o2)
+			{
 				return o1.id.compareTo(o2.id);
 			}
 		};
-		
+
 		public final UUID id;
 		public final Document doc;
 
-		public Entry(UUID id, Document doc) {
+		public Entry(UUID id, Document doc)
+		{
 			this.id = id;
 			this.doc = doc;
 		}
-		
-		public String toString(){
+
+		public String toString()
+		{
 			return this.id + ":" + this.doc;
 		}
 	}
 
-	public enum Type {
+	public enum Type
+	{
 		NULL(0x00, true),
 		DOCUMENT(0x01, false),
 		STRING(0x0F, true);
@@ -38,12 +44,14 @@ public abstract class Document {
 		public final int code;
 		public final boolean valuetype;
 
-		private Type(int code, boolean valuetype) {
+		private Type(int code, boolean valuetype)
+		{
 			this.valuetype = valuetype;
 			this.code = code;
 		}
 
-		public static Type getByCode(int code) {
+		public static Type getByCode(int code)
+		{
 			for (Type t : Type.values())
 				if (t.code == code)
 					return t;
@@ -55,16 +63,19 @@ public abstract class Document {
 	public final Type type;
 	private volatile boolean complete = false;
 
-	public Document(long version, Type type) {
+	public Document(long version, Type type)
+	{
 		this.version = version;
 		this.type = type;
 	}
 
-	public long version() {
+	public long version()
+	{
 		return this.version;
 	}
 
-	public static Document newest(Document one, Document two) {
+	public static Document newest(Document one, Document two)
+	{
 		if (one.version == two.version) {
 			if (one.hashCode() < two.hashCode())
 				return one;
@@ -74,12 +85,14 @@ public abstract class Document {
 		return one.version > two.version ? one : two;
 	}
 
-	public String toString() {
+	public String toString()
+	{
 		return "(" + this.version + ") ";
 	}
 
 	@Override
-	public boolean equals(Object that) {
+	public boolean equals(Object that)
+	{
 		if (!(that instanceof Document))
 			return false;
 		Document thatbase = (Document) that;
@@ -90,11 +103,13 @@ public abstract class Document {
 		return true;
 	}
 
-	public static Document merge(Document... docs) {
+	public static Document merge(Document... docs)
+	{
 		return merge(Arrays.asList(docs));
 	}
 
-	public static Document merge(Iterable<Document> docs) {
+	public static Document merge(Iterable<Document> docs)
+	{
 		Iterator<Document> it = docs.iterator();
 		Document doc = it.next();
 		while (it.hasNext())
@@ -102,7 +117,8 @@ public abstract class Document {
 		return doc;
 	}
 
-	public static Document merge(Document doc1, Document doc2) {
+	public static Document merge(Document doc1, Document doc2)
+	{
 		if (doc1.type.valuetype && doc2.type.valuetype)
 			return newest(doc1, doc2);
 		if (doc1 instanceof DictDocument && doc2 instanceof DictDocument)
@@ -120,7 +136,8 @@ public abstract class Document {
 	 * @param doc2
 	 * @return
 	 */
-	private static Document mergeDictValue(DictDocument doc1, Document doc2) {
+	private static Document mergeDictValue(DictDocument doc1, Document doc2)
+	{
 		if (doc2.version > doc1.version) // value type is newer than the newest dict entry
 			return doc2;
 		return doc1.clearOn(doc2.version);
@@ -131,14 +148,15 @@ public abstract class Document {
 	 * @param doc2
 	 * @return
 	 */
-	private static Document mergeDictDict(DictDocument doc1, DictDocument doc2) {
+	private static Document mergeDictDict(DictDocument doc1, DictDocument doc2)
+	{
 		long cleared = Math.max(doc1.clearedOn, doc2.clearedOn);
 		doc1 = doc1.clearOn(cleared);
 		doc2 = doc2.clearOn(cleared);
 		Map<String, Document> map = new TreeMap<String, Document>();
-		for (Map.Entry<String, Document> e:doc1.entrySet())
-			map.put(e.getKey(), e.getValue());		
-		for (Map.Entry<String, Document> e:doc2.entrySet()){
+		for (Map.Entry<String, Document> e : doc1.entrySet())
+			map.put(e.getKey(), e.getValue());
+		for (Map.Entry<String, Document> e : doc2.entrySet()) {
 			Document d = e.getValue();
 			if (map.containsKey(e.getKey()))
 				d = Document.merge(d, map.get(e.getKey()));
@@ -151,7 +169,8 @@ public abstract class Document {
 	 * @param values
 	 * @return
 	 */
-	public static Document newest(Iterable<Document> values) {
+	public static Document newest(Iterable<Document> values)
+	{
 		Iterator<Document> it = values.iterator();
 		Document newest = it.next();
 		while (it.hasNext())
@@ -163,7 +182,8 @@ public abstract class Document {
 	 * @param values
 	 * @return
 	 */
-	public static long newestVersion(Iterable<Document> values) {
+	public static long newestVersion(Iterable<Document> values)
+	{
 		Iterator<Document> docs = values.iterator();
 		if (!docs.hasNext())
 			return 0;

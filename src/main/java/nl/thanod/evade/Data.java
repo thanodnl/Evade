@@ -8,8 +8,10 @@ import java.nio.charset.Charset;
 /**
  * @author nilsdijk
  */
-public class Data {
-	public static byte[] encode(long n) {
+public class Data
+{
+	public static byte[] encode(long n)
+	{
 		int numRelevantBits = Long.SIZE - Long.numberOfLeadingZeros(n);
 		int numBytes = (numRelevantBits + 6) / 7;
 		if (numBytes == 0)
@@ -25,7 +27,8 @@ public class Data {
 		return output;
 	}
 
-	public static long decode(byte[] b) {
+	public static long decode(byte[] b)
+	{
 		long n = 0;
 		for (int i = 0; i < b.length; i++) {
 			int curByte = b[i] & 0xFF;
@@ -36,7 +39,8 @@ public class Data {
 		return n;
 	}
 
-	public static String hex(byte[] bytes) {
+	public static String hex(byte[] bytes)
+	{
 		String hex = "0123456789ABCDEF";
 		StringBuilder sb = new StringBuilder(2 + bytes.length * 2);
 		sb.append("0x");
@@ -48,7 +52,8 @@ public class Data {
 		return sb.toString();
 	}
 
-	public static String bits(byte[] bytes) {
+	public static String bits(byte[] bytes)
+	{
 		StringBuilder sb = new StringBuilder(2 + bytes.length * 8 + bytes.length - 1);
 		sb.append("0b");
 		for (int i = 0; i < bytes.length; i++) {
@@ -67,12 +72,13 @@ public class Data {
 		return sb.toString();
 	}
 
-	public static void main(String... args) {
+	public static void main(String... args)
+	{
 		System.out.println(bits(encode(1337)));
 		System.out.println(Charset.forName("UTF16"));
 		byte[] b = "Hello World".getBytes(Charset.forName("UTF16"));
 		System.out.println(hex(b));
-		System.out.println(new String(b,Charset.forName("UTF16")));
+		System.out.println(new String(b, Charset.forName("UTF16")));
 	}
 
 }

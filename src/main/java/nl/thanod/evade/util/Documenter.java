@@ -13,11 +13,13 @@ import nl.thanod.evade.document.DocumentBuilder;
 /**
  * @author nilsdijk
  */
-public class Documenter implements Iterable<Document.Entry> {
+public class Documenter implements Iterable<Document.Entry>
+{
 
 	private final ArrayList<Iterable<Entry>> documentcontainers;
 
-	public Documenter(Iterable<Document.Entry>... input) {
+	public Documenter(Iterable<Document.Entry>... input)
+	{
 		this.documentcontainers = new ArrayList<Iterable<Document.Entry>>();
 		for (int i = 0; i < input.length; i++)
 			this.documentcontainers.add(input[i]);
@@ -28,7 +30,8 @@ public class Documenter implements Iterable<Document.Entry> {
 	 * @see java.lang.Iterable#iterator()
 	 */
 	@Override
-	public Iterator<Entry> iterator() {
+	public Iterator<Entry> iterator()
+	{
 		// if there is only one entry return that iterator
 		if (this.documentcontainers.size() == 1)
 			return this.documentcontainers.get(0).iterator();
@@ -40,7 +43,8 @@ public class Documenter implements Iterable<Document.Entry> {
 		final Comparator<Peekerator<Entry>> sort = new Peekerator.Sorter<Document.Entry>(Document.Entry.COMPARATOR);
 		return new Generator<Document.Entry>() {
 			@Override
-			protected Entry generate() throws NoSuchElementException {
+			protected Entry generate() throws NoSuchElementException
+			{
 				if (peekers.size() <= 0)
 					throw new NoSuchElementException();
 				Collections.sort(peekers, sort);
@@ -71,7 +75,8 @@ public class Documenter implements Iterable<Document.Entry> {
 		};
 	}
 
-	public static void main(String... args) {
+	public static void main(String... args)
+	{
 		Memtable m1 = new Memtable();
 		Memtable m2 = new Memtable();
 		Memtable m3 = new Memtable();
@@ -86,17 +91,17 @@ public class Documenter implements Iterable<Document.Entry> {
 		UUID id2 = UUID.randomUUID();
 		Document doc2 = DocumentBuilder.start(1).put("name", "koen").put("age", 24).make();
 		m1.update(id2, doc2);
-		
+
 		doc2 = DocumentBuilder.start(2).put("age", 26).make();
 		m3.update(id2, doc2);
 
 		UUID id3 = UUID.randomUUID();
 		Document doc3 = DocumentBuilder.start(1).put("name", "sam").put("age", 25).make();
 		m1.update(id3, doc3);
-		
+
 		doc3 = DocumentBuilder.start(2).put("chair", "wheel").make();
 		m2.update(id3, doc3);
-		
+
 		doc3 = DocumentBuilder.start(2).put("hair", "black").make();
 		m3.update(id3, doc3);
 
