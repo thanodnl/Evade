@@ -20,7 +20,7 @@ public class Reading
 {
 	public static void main(String... args) throws IOException
 	{
-		File f = new File("data", "out97.sstable");
+		File f = new File("data", "out0.sstable");
 		SSTable ss = new SSTable(f);
 		measureReading(ss);
 		containsTest(ss);

@@ -28,7 +28,7 @@ public class Names
 		while ((line = r.readLine()) != null) {
 			table.update(UUID.randomUUID(), DocumentBuilder.start(System.currentTimeMillis()).put("name", line).make());
 			c++;
-			if (c >= 10000){
+			if (c >= 50000){
 				System.out.println(SSTable.save(table));
 				table = new Memtable();
 				c = 0;

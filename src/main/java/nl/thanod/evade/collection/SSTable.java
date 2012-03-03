@@ -12,6 +12,7 @@ import java.util.*;
 import nl.thanod.evade.collection.SSTable.Index.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.document.DocumentSerializer;
 import nl.thanod.evade.util.ByteBufferInputStream;
 import nl.thanod.evade.util.CountingOutputStream;
@@ -168,13 +169,7 @@ public class SSTable extends Collection
 
 	public Document get(SSTable.Index.Pointer pointer)
 	{
-		try {
-			return DocumentSerializer.deserialize(new DataInputStream(new ByteBufferInputStream(this.datamap, pointer.pos)));
-		} catch (IOException ball) {
-			// TODO Auto-generated catch block
-			ball.printStackTrace();
-			return null;
-		}
+		return DocumentSerializerVisitor.deserialize(new DataInputStream(new ByteBufferInputStream(this.datamap, pointer.pos)));
 	}
 
 	/*
@@ -223,12 +218,15 @@ public class SSTable extends Collection
 			FileOutputStream fos = new FileOutputStream(f);
 			CountingOutputStream cos = new CountingOutputStream(fos);
 			DataOutputStream dos = new DataOutputStream(cos);
+			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(dos);
 
 			// write the datablob
 			while (it.hasNext() && cos.getCount() < maxdatasize) {
 				Document.Entry e = it.next();
 				index.put(e.id, cos.getCount());
-				DocumentSerializer.serialize(dos, e.doc);
+				
+				// serialize document
+				e.doc.accept(dsv);
 			}
 
 			int indexstart = cos.getCount();

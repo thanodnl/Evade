@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.document;
 
+import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 
@@ -33,5 +34,14 @@ public class NullDocument extends Document
 	public boolean test(Constraint c)
 	{
 		return c.test(this);
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor.DocumentVisitor)
+	 */
+	@Override
+	public void accept(DocumentVisitor visitor)
+	{
+		visitor.visit(this);
 	}
 }

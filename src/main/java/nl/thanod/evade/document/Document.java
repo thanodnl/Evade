@@ -5,6 +5,7 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 /**
@@ -197,6 +198,7 @@ public abstract class Document
 	}
 
 	public abstract boolean test(Constraint c);
+	public abstract void accept(DocumentVisitor visitor);
 
 	public Document path(List<String> path)
 	{

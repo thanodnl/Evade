@@ -5,6 +5,7 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 /**
@@ -108,5 +109,14 @@ public class DictDocument extends Document
 		if (d == null)
 			return null;
 		return d.path(path.subList(1, path.size()));
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor.DocumentVisitor)
+	 */
+	@Override
+	public void accept(DocumentVisitor visitor)
+	{
+		visitor.visit(this);
 	}
 }

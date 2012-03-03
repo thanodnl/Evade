@@ -6,29 +6,22 @@ package nl.thanod.evade.document;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
-
 /**
  * @author nilsdijk
  */
-public class StringDocument extends Document
+public class ValueDocument<T> extends Document
 {
 
-	public final String value;
+	public final T value;
 
 	/**
 	 * @param version
 	 * @param type
 	 */
-	public StringDocument(long version, String value)
+	public ValueDocument(long version, T value)
 	{
 		super(version, Type.STRING);
 		this.value = value;
-	}
-
-	@Override
-	public String toString()
-	{
-		return super.toString() + this.value;
 	}
 
 	@Override
@@ -36,19 +29,22 @@ public class StringDocument extends Document
 	{
 		if (!super.equals(that))
 			return false;
-		if (!(that instanceof StringDocument))
+		if (!(that instanceof ValueDocument))
 			return false;
-		StringDocument thats = (StringDocument) that;
+		ValueDocument<?> thats = (ValueDocument<?>) that;
 		return this.value.equals(thats.value);
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
 	 */
 	@Override
 	public boolean test(Constraint c)
 	{
-		return c.test(this);
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	/* (non-Javadoc)
@@ -57,6 +53,8 @@ public class StringDocument extends Document
 	@Override
 	public void accept(DocumentVisitor visitor)
 	{
-		visitor.visit(this);
+		// TODO Auto-generated method stub
+		
 	}
+
 }
