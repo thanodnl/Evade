@@ -120,12 +120,15 @@ public class SSTable extends Collection
 	private static final int DEF_DATA_SIZE = 64 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
-	private final MappedByteBuffer datamap;
-
+	private final File file;
+	
 	protected final Index index;
+	private final MappedByteBuffer datamap;
 
 	public SSTable(File file) throws IOException
 	{
+		this.file = file;
+		
 		FileInputStream fin = new FileInputStream(file);
 		FileChannel ch = fin.getChannel();
 		ch.position(ch.size() - 4);
@@ -133,24 +136,12 @@ public class SSTable extends Collection
 		DataInputStream din = new DataInputStream(fin);
 		int indexstart = din.readInt();
 
-		datamap = ch.map(MapMode.READ_ONLY, 0, indexstart);
+		// the index is located at start index until the end of the file minus the 4 bytes
+		// indicating the start of the index
 		index = new Index(ch.map(MapMode.READ_ONLY, indexstart, ch.size() - indexstart - 4));
-	}
-
-	public void printStuff()
-	{
-		System.out.println(this.index.count());
-		for (int i = 0; i < this.index.count(); i++)
-			System.out.println(this.index.get(i));
-
-		System.out.println();
-		System.out.println(this.index.before(UUID.fromString("6ac4fb22-1f9b-419f-b608-497e662ba392")));
-
-		UUID i = UUID.randomUUID();
-		System.out.println(i);
-		SSTable.Index.Pointer d;
-		System.out.println(d = this.index.before(i));
-		System.out.println(d.id.compareTo(i));
+		
+		// the beginning of the file to the start of the index is the datapart of the file
+		datamap = ch.map(MapMode.READ_ONLY, 0, indexstart);
 	}
 
 	/*
