@@ -3,10 +3,9 @@
  */
 package nl.thanod.evade.document;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+
+import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -89,5 +88,25 @@ public class DictDocument extends Document
 				map.put(e.getKey(), e.getValue());
 		}
 		return new DictDocument(map, version, false);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
+	 */
+	@Override
+	public boolean test(Constraint c)
+	{
+		return c.test(this);
+	}
+
+	@Override
+	public Document path(List<String> path)
+	{
+		Document d = this.get(path.get(0));
+		if (d == null)
+			return null;
+		return d.path(path.subList(1, path.size()));
 	}
 }

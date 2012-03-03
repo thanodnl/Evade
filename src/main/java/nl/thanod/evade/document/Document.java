@@ -5,6 +5,8 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.query.Constraint;
+
 /**
  * @author nilsdijk
  */
@@ -29,6 +31,7 @@ public abstract class Document
 			this.doc = doc;
 		}
 
+		@Override
 		public String toString()
 		{
 			return this.id + ":" + this.doc;
@@ -61,7 +64,6 @@ public abstract class Document
 
 	public final long version;
 	public final Type type;
-	private volatile boolean complete = false;
 
 	public Document(long version, Type type)
 	{
@@ -85,6 +87,7 @@ public abstract class Document
 		return one.version > two.version ? one : two;
 	}
 
+	@Override
 	public String toString()
 	{
 		return "(" + this.version + ") ";
@@ -191,5 +194,12 @@ public abstract class Document
 		while (docs.hasNext())
 			version = Math.max(version, docs.next().version);
 		return version;
+	}
+
+	public abstract boolean test(Constraint c);
+
+	public Document path(List<String> path)
+	{
+		return path.size() == 0 ? this : null;
 	}
 }

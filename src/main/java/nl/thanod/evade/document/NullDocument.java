@@ -3,6 +3,8 @@
  */
 package nl.thanod.evade.document;
 
+import nl.thanod.evade.query.Constraint;
+
 
 /**
  * @author nilsdijk
@@ -22,5 +24,14 @@ public class NullDocument extends Document
 	public String toString()
 	{
 		return super.toString() + "null";
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
+	 */
+	@Override
+	public boolean test(Constraint c)
+	{
+		return c.test(this);
 	}
 }
