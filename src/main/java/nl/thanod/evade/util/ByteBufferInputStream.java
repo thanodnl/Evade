@@ -14,12 +14,11 @@ public class ByteBufferInputStream extends InputStream
 {
 
 	private final ByteBuffer buffer;
-	private int pos;
 
 	public ByteBufferInputStream(ByteBuffer buffer, int pos)
 	{
-		this.buffer = buffer;
-		this.pos = pos;
+		this.buffer = buffer.duplicate();
+		this.buffer.position(pos);
 	}
 
 	/*
@@ -29,7 +28,20 @@ public class ByteBufferInputStream extends InputStream
 	@Override
 	public int read() throws IOException
 	{
-		return this.buffer.get(this.pos++) & 0xFF;
+		return this.buffer.get() & 0xFF;
+	}
+	
+	@Override
+	public int read(byte[] b){
+		this.buffer.get(b);
+		return b.length;
+	}
+
+	@Override
+	public int read(byte[] b, int off, int len)
+	{
+		this.buffer.get(b, off, len);
+		return len;
 	}
 
 }
