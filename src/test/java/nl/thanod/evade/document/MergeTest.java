@@ -13,13 +13,15 @@ import org.testng.annotations.Test;
 /**
  * @author nilsdijk
  */
-public class MergeTest {
+public class MergeTest
+{
 
 	private List<Document> mutations;
 	private Document result;
 
 	@BeforeClass
-	public void setup() {
+	public void setup()
+	{
 		this.mutations = new ArrayList<Document>();
 
 		this.mutations.add(DocumentBuilder.start(1).put("Name", "Nils Dijk").make());
@@ -37,7 +39,8 @@ public class MergeTest {
 	}
 
 	@Test
-	public void anyOrder() {
+	public void anyOrder()
+	{
 		for (List<Document> bl : new AllOrders<Document>(this.mutations)) {
 			StringBuilder sb = new StringBuilder();
 			Document b = null;
@@ -45,13 +48,13 @@ public class MergeTest {
 				if (b == null)
 					b = bs;
 				else
-					b = Document.merge(b,bs);
+					b = Document.merge(b, bs);
 				if (sb.length() > 0)
 					sb.append(',');
 				sb.append(bs.version);
 			}
-			
-			Assert.assertEquals(b, this.result, "\nexpected:"+this.result+"\nbut was:"+b + "\nmergeorder:"+sb+'\n');
+
+			Assert.assertEquals(b, this.result, "\nexpected:" + this.result + "\nbut was:" + b + "\nmergeorder:" + sb + '\n');
 		}
 	}
 }

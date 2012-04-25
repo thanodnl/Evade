@@ -3,8 +3,8 @@
  */
 package nl.thanod.evade.document.visitor;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.nio.charset.Charset;
@@ -24,9 +24,9 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 
 	public static final Charset STRING_ENCODING = Charset.forName("UTF8");
 
-	private final DataOutputStream out;
+	private final DataOutput out;
 
-	public DocumentSerializerVisitor(DataOutputStream out)
+	public DocumentSerializerVisitor(DataOutput out)
 	{
 		this.out = out;
 	}
@@ -100,10 +100,10 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 		}
 	}
 
-	public static Document deserialize(DataInputStream stream)
+	public static Document deserialize(DataInput stream)
 	{
 		try {
-			int code = stream.read();
+			int code = stream.readByte();
 			Document.Type type = Document.Type.getByCode(code);
 			switch (type) {
 				case NULL:
@@ -112,7 +112,7 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 					return new StringDocument(stream.readLong(), stream.readUTF());
 				case DOCUMENT:
 					Map<String, Document> map = new TreeMap<String, Document>();
-					while (stream.read() > 0)
+					while (stream.readByte() != 0)
 						map.put(stream.readUTF(), deserialize(stream));
 					return new DictDocument(map, stream.readLong(), false);
 				default:

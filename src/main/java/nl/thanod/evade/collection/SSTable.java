@@ -4,6 +4,7 @@
 package nl.thanod.evade.collection;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -13,7 +14,7 @@ import nl.thanod.evade.collection.SSTable.Index.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
-import nl.thanod.evade.util.ByteBufferInputStream;
+import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.CountingOutputStream;
 import nl.thanod.evade.util.Generator;
 
@@ -168,7 +169,7 @@ public class SSTable extends Collection
 
 	public Document get(SSTable.Index.Pointer pointer)
 	{
-		return DocumentSerializerVisitor.deserialize(new DataInputStream(new ByteBufferInputStream(this.datamap, pointer.pos)));
+		return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput((ByteBuffer)this.datamap.duplicate().position(pointer.pos)));
 	}
 
 	/*
@@ -223,7 +224,7 @@ public class SSTable extends Collection
 			while (it.hasNext() && cos.getCount() < maxdatasize) {
 				Document.Entry e = it.next();
 				index.put(e.id, cos.getCount());
-				
+
 				// serialize document
 				e.doc.accept(dsv);
 			}
