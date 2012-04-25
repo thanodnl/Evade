@@ -22,6 +22,14 @@ public class Documenter implements Iterable<Document.Entry>
 		this.documentcontainers.addAll(input);
 	}
 
+	public Documenter(Iterable<Document.Entry> ide, Collection<? extends Iterable<Document.Entry>> input)
+	{
+		this.documentcontainers = new ArrayList<Iterable<Document.Entry>>(input.size() + 1);
+		if (ide != null)
+			this.documentcontainers.add(ide);
+		this.documentcontainers.addAll(input);
+	}
+
 	public Documenter(Iterable<Document.Entry>... input)
 	{
 		this.documentcontainers = new ArrayList<Iterable<Document.Entry>>();
@@ -43,6 +51,13 @@ public class Documenter implements Iterable<Document.Entry>
 		final List<Peekerator<Document.Entry>> peekers = new ArrayList<Peekerator<Entry>>(this.documentcontainers.size());
 		for (Iterable<Document.Entry> c : this.documentcontainers)
 			peekers.add(new Peekerator<Document.Entry>(c.iterator()));
+
+		// remove empty peekerators
+		Iterator<Peekerator<Entry>> it = peekers.iterator();
+		while (it.hasNext()) {
+			if (!it.next().hasNext())
+				it.remove();
+		}
 
 		final Comparator<Peekerator<Entry>> sort = new Peekerator.Sorter<Document.Entry>(Document.Entry.COMPARATOR);
 		return new Generator<Document.Entry>() {

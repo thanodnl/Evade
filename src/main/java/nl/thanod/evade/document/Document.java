@@ -137,6 +137,12 @@ public abstract class Document
 
 	public static Document merge(Document doc1, Document doc2)
 	{
+		// return the other is one of those is empty
+		if (doc1 == null)
+			return doc2;
+		if (doc2 == null)
+			return doc1;
+
 		if (doc1.type.valuetype && doc2.type.valuetype)
 			return newest(doc1, doc2);
 		if (doc1 instanceof DictDocument && doc2 instanceof DictDocument)
@@ -212,6 +218,7 @@ public abstract class Document
 	}
 
 	public abstract boolean test(Constraint c);
+
 	public abstract void accept(DocumentVisitor visitor);
 
 	public Document path(List<String> path)
