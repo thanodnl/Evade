@@ -3,12 +3,14 @@
  */
 package nl.thanod.evade.collection;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.util.Documenter;
 
@@ -26,8 +28,13 @@ public class Table extends Collection
 		sstables = new LinkedList<SSTable>();
 	}
 
+	private void addSSTable(SSTable ss)
+	{
+		this.sstables.add(ss);
+	}
+
 	/**
-	 * uses dubble checked locking to get the {@link Memtable} belonging to this
+	 * uses double checked locking to get the {@link Memtable} belonging to this
 	 * {@link Table}
 	 * @return an instance of the memtable to write to
 	 */
@@ -102,4 +109,60 @@ public class Table extends Collection
 		return count;
 	}
 
+	private static class LinkedEntry<T>
+	{
+		public final LinkedEntry<T> next;
+		public final T t;
+
+		public LinkedEntry(LinkedEntry<T> next, T t)
+		{
+			this.next = next;
+			this.t = t;
+		}
+	}
+
+	public void ensureStringIndex(List<String> path)
+	{
+		long time = System.nanoTime();
+		Map<String, LinkedEntry<UUID>> index = new TreeMap<String, LinkedEntry<UUID>>();
+		for (Document.Entry e : this) {
+			Document d = e.doc.path(path);
+			if (d == null)
+				continue;
+			if (d instanceof StringDocument) {
+				String value = ((StringDocument) d).value;
+				value = value.toLowerCase();
+				index.put(value, new LinkedEntry<UUID>(index.get(value), e.id));
+			}
+		}
+		time = System.nanoTime() - time;
+		
+		System.out.println("sorting the index took: " + time + "ns (" + (time/1000000) + "ms)");
+		System.out.println(index.size());
+	}
+
+	public static Table load(final File dir, final String name)
+	{
+		Table t = new Table();
+		File[] files = dir.listFiles(new FileFilter() {
+			final Pattern p = Pattern.compile(name + "\\d+\\.sstable");
+
+			@Override
+			public boolean accept(File f)
+			{
+				if (!f.isFile())
+					return false;
+				return p.matcher(f.getName()).matches();
+			}
+		});
+
+		for (File f : files) {
+			try {
+				t.addSSTable(new SSTable(f));
+			} catch (IOException ball) {
+				ball.printStackTrace();
+			}
+		}
+		return t;
+	}
 }

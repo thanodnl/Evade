@@ -53,7 +53,7 @@ public class SSTable extends Collection
 		protected Index(MappedByteBuffer buffer)
 		{
 			this.buffer = buffer;
-			this.validate();
+//			this.validate();
 		}
 
 		public SSTable.Index.Pointer get(int ordinal)

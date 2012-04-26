@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import nl.thanod.evade.collection.SSTable;
+import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.modifiers.LowerCase;
 import nl.thanod.evade.query.Constraint;
@@ -21,15 +21,17 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
-		File f = new File("data", "out20.sstable");
-		SSTable ss = new SSTable(f);
+		Table t = Table.load(new File("data"), "out");
+
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
 		List<String> path = new ArrayList<String>();
 		path.add("name");
+		
+		t.ensureStringIndex(path);
 		for (int i = 0; i < 100; i++) {
 			int co = 0;
 			long start = System.nanoTime();
-			for (Document.Entry e : ss) {
+			for (Document.Entry e : t) {
 				Document d = e.doc;
 				d = d.path(path);
 				if (d != null && d.test(c)) {
