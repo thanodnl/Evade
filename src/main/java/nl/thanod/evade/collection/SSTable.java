@@ -10,7 +10,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 
-import nl.thanod.evade.collection.SSTable.Index.Pointer;
+import nl.thanod.evade.collection.index.UUIDPositionIndex;
+import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
@@ -24,97 +25,13 @@ import nl.thanod.evade.util.Generator;
 public class SSTable extends Collection
 {
 
-	public static class Index
-	{
-		public static class Pointer
-		{
-			public final UUID id;
-			public final int pos;
-			public final int ordinal;
-
-			protected Pointer(UUID id, int pos, int ordinal)
-			{
-				this.id = id;
-				this.pos = pos;
-				this.ordinal = ordinal;
-			}
-
-			@Override
-			public String toString()
-			{
-				return this.id.toString() + ": " + this.pos;
-			}
-
-		}
-
-		public static final int INDEXSIZE = 16 + 4;
-		private final MappedByteBuffer buffer;
-
-		protected Index(MappedByteBuffer buffer)
-		{
-			this.buffer = buffer;
-//			this.validate();
-		}
-
-		public SSTable.Index.Pointer get(int ordinal)
-		{
-			int start = ordinal * INDEXSIZE;
-
-			long msb = buffer.getLong(start);
-			long lsb = buffer.getLong(start + 8);
-			int pos = buffer.getInt(start + 16);
-
-			return new Pointer(new UUID(msb, lsb), pos, ordinal);
-		}
-
-		public int count()
-		{
-			return this.buffer.capacity() / INDEXSIZE;
-		}
-
-		public SSTable.Index.Pointer before(UUID id)
-		{
-			int min = 0;
-			int max = count();
-
-			Pointer p;
-			do {
-				int mid = (max - min) / 2 + min;
-				p = get(mid);
-
-				if (p.id.equals(id)) {
-					return p;
-				} else if (p.id.compareTo(id) < 0) {
-					min = mid + 1;
-				} else {
-					max = mid - 1;
-				}
-			} while (min < max);
-			if (min == max)
-				p = get(min);
-			return p;
-		}
-
-		public void validate()
-		{
-			Pointer p = get(0);
-			Pointer p2;
-			for (int i = 1; i < count(); i++) {
-				p2 = get(i);
-				if (p.id.compareTo(p2.id) >= 0)
-					throw new IllegalStateException("not ordered at index " + i);
-				p = p2;
-			}
-		}
-	}
-
 	private static final File DATA_DIR = new File("data");
 	private static final int DEF_DATA_SIZE = 64 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	public final File file;
 
-	protected final Index index;
+	protected final UUIDPositionIndex index;
 	private final MappedByteBuffer datamap;
 
 	private final UUID min;
@@ -133,7 +50,7 @@ public class SSTable extends Collection
 
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
-		index = new Index(ch.map(MapMode.READ_ONLY, indexstart, ch.size() - indexstart - 4));
+		index = new UUIDPositionIndex(ch.map(MapMode.READ_ONLY, indexstart, ch.size() - indexstart - 4));
 
 		this.min = this.index.get(0).id;
 		this.max = this.index.get(this.index.count() - 1).id;
@@ -167,9 +84,9 @@ public class SSTable extends Collection
 		return get(p);
 	}
 
-	public Document get(SSTable.Index.Pointer pointer)
+	public Document get(UUIDPositionIndex.Pointer pointer)
 	{
-		return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput((ByteBuffer)this.datamap.duplicate().position(pointer.pos)));
+		return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput((ByteBuffer) this.datamap.duplicate().position(pointer.pos)));
 	}
 
 	/*
