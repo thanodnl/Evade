@@ -3,9 +3,10 @@
  */
 package nl.thanod.evade.document;
 
+import java.util.Comparator;
+
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
-
 
 /**
  * @author nilsdijk
@@ -13,6 +14,14 @@ import nl.thanod.evade.query.Constraint;
 public class StringDocument extends Document
 {
 
+	public static final Comparator<StringDocument> VALUE_SORT = new Comparator<StringDocument>() {
+
+		@Override
+		public int compare(StringDocument o1, StringDocument o2)
+		{
+			return o1.value.compareTo(o2.value);
+		}
+	};
 	public final String value;
 
 	/**
@@ -42,8 +51,10 @@ public class StringDocument extends Document
 		return this.value.equals(thats.value);
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
 	 */
 	@Override
 	public boolean test(Constraint c)
@@ -51,8 +62,11 @@ public class StringDocument extends Document
 		return c.test(this);
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor.DocumentVisitor)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor
+	 * .DocumentVisitor)
 	 */
 	@Override
 	public void accept(DocumentVisitor visitor)

@@ -10,7 +10,6 @@ import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
  * @author nilsdijk
- *
  */
 public abstract class AbstractConstraint implements Constraint
 {
@@ -24,21 +23,33 @@ public abstract class AbstractConstraint implements Constraint
 		this.m = m;
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.query.Constraint#test(nl.thanod.evade.document.StringDocument)
+	@Override
+	public Modifier getModifier()
+	{
+		return this.m;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.query.Constraint#test(nl.thanod.evade.document.StringDocument
+	 * )
 	 */
 	@Override
-	public boolean test(StringDocument doc){
+	public boolean test(StringDocument doc)
+	{
 		return false;
 	}
-	
+
 	@Override
-	public boolean test(NullDocument doc){
+	public boolean test(NullDocument doc)
+	{
 		return false;
 	}
-	
+
 	@Override
-	public boolean test(DictDocument doc){
+	public boolean test(DictDocument doc)
+	{
 		return false;
 	}
 }
