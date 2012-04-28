@@ -15,6 +15,7 @@ import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 
 /**
@@ -55,7 +56,7 @@ public class SSIndex implements Searchable<Index.Entry>
 
 	private final RandomAccessFile raf;
 
-	private final MappedByteBuffer datamap;
+	private final ByteBuffer datamap;
 	private final OffsetTable sortedIndex;
 	private final OffsetTable uuidIndex;
 
@@ -63,11 +64,11 @@ public class SSIndex implements Searchable<Index.Entry>
 	{
 		raf = new RandomAccessFile(file, "r");
 
-		IndexHeader indexHeader = IndexHeader.read(raf);
+		Header indexHeader = Header.read(raf);
 
-		datamap = indexHeader.mapData(raf);
-		sortedIndex = new OffsetTable(indexHeader.mapSortedIndex(raf));
-		uuidIndex = new OffsetTable(indexHeader.mapUUIDIndex(raf));
+		datamap = indexHeader.map(raf,Header. Type.DATA);
+		sortedIndex = new OffsetTable(indexHeader.map(raf, Header.Type.SORTED_INDEX));
+		uuidIndex = new OffsetTable(indexHeader.map(raf, Header.Type.UUID_INDEX));
 	}
 
 	/*

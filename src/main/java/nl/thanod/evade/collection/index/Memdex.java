@@ -16,6 +16,7 @@ import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.query.Constraint;
+import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.ConvertedComparator;
 
@@ -60,12 +61,13 @@ public class Memdex
 		File file = new File("data", "out0.idx");
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
-		IndexHeader indexHeader = new IndexHeader();
+		Header indexHeader = new Header();
 
 		// reserve some room for the index table
-		indexHeader.write(raf);
+		Header.reserve(raf, 4);
 
-		indexHeader.setDataPosition((int) raf.getFilePointer());
+		int offset = (int) raf.getFilePointer();
+		indexHeader.put(Header.Type.DATA, offset);
 
 		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
 		ByteBufferDataInput tdi = new ByteBufferDataInput(tmap);
@@ -73,7 +75,7 @@ public class Memdex
 			tmap.position(pos.intValue());
 
 			// put the offset in the sindex
-			sindex.add(raf.getFilePointer() - indexHeader.getDataPosition());
+			sindex.add(raf.getFilePointer() - offset);
 
 			// copy the uuid
 			raf.writeLong(tmap.getLong());
@@ -85,16 +87,16 @@ public class Memdex
 		}
 
 		// put the sorted index starting position in the header
-		indexHeader.setSortedIndexPosition((int) raf.getFilePointer());
+		indexHeader.put(Header.Type.SORTED_INDEX, (int) raf.getFilePointer());
 		// write the sindex to file
 		for (Long pos : sindex)
 			raf.writeInt(pos.intValue());
 
 		// put the uuid index starting poisition in the header
-		indexHeader.setUUIDIndexPosition((int) raf.getFilePointer());
+		indexHeader.put(Header.Type.UUID_INDEX, (int) raf.getFilePointer());
 
 		// map the contents to memory
-		final ByteBuffer map = indexHeader.mapData(raf);
+		final ByteBuffer map = indexHeader.map(raf, Header.Type.DATA);
 
 		// sort the sindex to be used as uuid index
 		Collections.sort(sindex, new ConvertedComparator<Long, UUID>() {
@@ -110,7 +112,7 @@ public class Memdex
 		for (Long pos : sindex)
 			raf.writeInt(pos.intValue());
 
-		indexHeader.setEOFPosition((int) raf.getFilePointer());
+		indexHeader.put(Header.Type.EOF, (int) raf.getFilePointer());
 
 		// update the index table
 		raf.seek(0); // stored at the begin of the file
@@ -146,7 +148,7 @@ public class Memdex
 			// do not index dict documents, instead make it a null index
 			if (doc.type == Type.DICT)
 				doc = new NullDocument(doc.version);
-			
+
 			doc = doc.modify(modifier);
 
 			// safe the index of the beginning of the entry

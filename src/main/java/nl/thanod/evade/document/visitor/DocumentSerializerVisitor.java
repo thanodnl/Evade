@@ -103,7 +103,7 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 	public static Document deserialize(DataInput stream)
 	{
 		try {
-			int code = stream.readByte();
+			int code = stream.readByte() & 0xFF;
 			Document.Type type = Document.Type.getByCode(code);
 			switch (type) {
 				case NULL:
