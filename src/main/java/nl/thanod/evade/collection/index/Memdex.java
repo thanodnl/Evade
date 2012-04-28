@@ -10,84 +10,20 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 
-import nl.thanod.evade.document.*;
-import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Type;
+import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.query.Constraint;
 import nl.thanod.evade.util.ByteBufferDataInput;
-import nl.thanod.evade.util.Linked;
+import nl.thanod.evade.util.ConvertedComparator;
 
 /**
  * @author nilsdijk
  */
-public class Memdex implements Index
+public class Memdex
 {
-	private final Map<StringDocument, Linked<UUID>> map;
-	private final Modifier modifier;
-
-	private Memdex(Map<StringDocument, Linked<UUID>> map, Modifier modifier)
-	{
-		this.map = map;
-		this.modifier = modifier;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.collection.index.Index#before(nl.thanod.evade.document
-	 * .Document)
-	 */
-	@Override
-	public Iterable<Entry> before(Document doc)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private static class DocumentSorter implements Comparator<Long>
-	{
-
-		private final ByteBuffer map;
-		private final ByteBufferDataInput di;
-		private final int documentOffset;
-
-		public DocumentSorter(ByteBuffer map, int documentOffset)
-		{
-			this.map = map;
-			this.di = new ByteBufferDataInput(this.map);
-
-			this.documentOffset = documentOffset;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
-		@Override
-		public int compare(Long o1, Long o2)
-		{
-			Document d1;
-			try {
-				this.map.position(o1.intValue() + this.documentOffset); // offset of 16 for the uuid
-				d1 = DocumentSerializerVisitor.deserialize(this.di);
-			} catch (Exception ball) {
-				return -1;
-			}
-
-			Document d2;
-			try {
-				this.map.position(o2.intValue() + this.documentOffset); // offset of 16 for the uuid
-				d2 = DocumentSerializerVisitor.deserialize(this.di);
-			} catch (Exception ball) {
-				return 1;
-			}
-
-			return d1.compareTo(d2);
-		}
-
-	}
 
 	public static void persistSortedIndex(Iterable<Document.Entry> data, List<String> path, Constraint constraint) throws IOException
 	{
@@ -96,18 +32,26 @@ public class Memdex implements Index
 		File temp = File.createTempFile("eva_", ".idx");
 		System.out.println(temp);
 
-		RandomAccessFile traf = new RandomAccessFile(temp, "rw");
+		RandomAccessFile tempraf = new RandomAccessFile(temp, "rw");
 
-		System.out.println("start persisting");
-		List<Long> offsets = writeTempIndex(traf, data, path);
-		System.out.println("started sorting");
+		// write the temporary index to temp
+		// and get an offset of entries from it
+		List<Long> offsets = writeTempIndex(tempraf, data, path);
 
 		// map data into memory for sorting
-		ByteBuffer tmap = traf.getChannel().map(MapMode.READ_ONLY, 0, traf.getFilePointer());
-		//final ByteBufferDataInput tdi = new ByteBufferDataInput(tmap);
+		final ByteBuffer tmap = tempraf.getChannel().map(MapMode.READ_ONLY, 0, tempraf.getFilePointer());
 
 		// sort the indexlist
-		Collections.sort(offsets, new DocumentSorter(tmap, 16));
+		Collections.sort(offsets, new ConvertedComparator<Long, Document>() {
+			final ByteBuffer map = tmap;
+
+			@Override
+			protected Document convert(Long from)
+			{
+				this.map.position(from.intValue() + 16);
+				return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput(this.map));
+			}
+		});
 
 		// list to hold the starts of every index item
 		List<Long> sindex = new LinkedList<Long>();
@@ -116,13 +60,12 @@ public class Memdex implements Index
 		File file = new File("data", "out0.idx");
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
-		// reserve some room for the index table
-		raf.writeInt(0); // placeholder for the start of the sorted data
-		raf.writeInt(0); // placeholder for the start of the sindex
-		raf.writeInt(0); // placeholder for the start of the uuidindex
-		raf.writeInt(0); // placeholder for the eof
+		IndexHeader indexHeader = new IndexHeader();
 
-		int datapos = (int) raf.getFilePointer();
+		// reserve some room for the index table
+		indexHeader.write(raf);
+
+		indexHeader.setDataPosition((int) raf.getFilePointer());
 
 		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
 		ByteBufferDataInput tdi = new ByteBufferDataInput(tmap);
@@ -141,45 +84,37 @@ public class Memdex implements Index
 			doc.accept(dsv);
 		}
 
+		// put the sorted index starting position in the header
+		indexHeader.setSortedIndexPosition((int) raf.getFilePointer());
 		// write the sindex to file
-		int sindexpos = (int) raf.getFilePointer();
 		for (Long pos : sindex)
 			raf.writeInt(pos.intValue());
 
-		int uuidpos = (int) raf.getFilePointer();
+		// put the uuid index starting poisition in the header
+		indexHeader.setUUIDIndexPosition((int) raf.getFilePointer());
 
-		// TODO write an offset table for the ordered uuid's
 		// map the contents to memory
-		final ByteBuffer map = raf.getChannel().map(MapMode.READ_ONLY, datapos, sindexpos - datapos);
+		final ByteBuffer map = indexHeader.mapData(raf);
 
-		// sort the sindex to uuid
-		Collections.sort(sindex, new Comparator<Long>() {
-
+		// sort the sindex to be used as uuid index
+		Collections.sort(sindex, new ConvertedComparator<Long, UUID>() {
 			@Override
-			public int compare(Long o1, Long o2)
+			public UUID convert(Long from)
 			{
-				map.position(o1.intValue());
-				UUID uuid1 = new UUID(map.getLong(), map.getLong());
-
-				map.position(o2.intValue());
-				UUID uuid2 = new UUID(map.getLong(), map.getLong());
-
-				return uuid1.compareTo(uuid2);
+				map.position(from.intValue());
+				return new UUID(map.getLong(), map.getLong());
 			}
 		});
 
-		// write the uuid's offsettable
+		// write the uuid's index
 		for (Long pos : sindex)
 			raf.writeInt(pos.intValue());
 
-		int eofpos = (int) raf.getFilePointer();
+		indexHeader.setEOFPosition((int) raf.getFilePointer());
 
 		// update the index table
-		raf.seek(0);
-		raf.writeInt(datapos); // the start of the sorted data
-		raf.writeInt(sindexpos); // the start of the sindex
-		raf.writeInt(uuidpos); // the start of the uuidindex
-		raf.writeInt(eofpos); // the eof
+		raf.seek(0); // stored at the begin of the file
+		indexHeader.write(raf);
 
 		// remove temp files
 		try {
@@ -187,7 +122,7 @@ public class Memdex implements Index
 		} catch (IOException ball) {
 		}
 		try {
-			traf.close();
+			tempraf.close();
 		} catch (IOException ball) {
 		}
 		try {
@@ -199,10 +134,10 @@ public class Memdex implements Index
 		}
 	}
 
-	private static List<Long> writeTempIndex(RandomAccessFile traf, Iterable<Document.Entry> data, List<String> path) throws IOException
+	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, List<String> path) throws IOException
 	{
 		List<Long> offsets = new ArrayList<Long>();
-		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(traf);
+		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(temp);
 		for (Document.Entry e : data) {
 			Document doc = e.doc.path(path);
 			if (doc == null)
@@ -215,11 +150,11 @@ public class Memdex implements Index
 			// TODO modify the document
 
 			// safe the index of the beginning of the entry
-			offsets.add(traf.getFilePointer());
+			offsets.add(temp.getFilePointer());
 
 			// write the address of the indexed object
-			traf.writeLong(e.id.getMostSignificantBits());
-			traf.writeLong(e.id.getLeastSignificantBits());
+			temp.writeLong(e.id.getMostSignificantBits());
+			temp.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
 			doc.accept(dsv);
