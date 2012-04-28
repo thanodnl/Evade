@@ -163,7 +163,7 @@ public class DictDocument extends Document
 			diff = te.getKey().compareTo(oe.getKey());
 			if (diff != 0)
 				return diff;
-			diff = Document.VALUE_SORT.compare(te.getValue(), oe.getValue());
+			diff = te.getValue().compareTo(oe.getValue());
 			if (diff != 0)
 				return diff;
 		}

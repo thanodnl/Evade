@@ -4,7 +4,6 @@
 package nl.thanod.evade.collection.index;
 
 import java.nio.MappedByteBuffer;
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -38,22 +37,6 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 
 	public static final int INDEXSIZE = 16 + 4;
 	private final MappedByteBuffer buffer;
-	private final Iterable<UUID> iterable = new Iterable<UUID>() {
-		@Override
-		public Iterator<UUID> iterator()
-		{
-			return new Generator<UUID>() {
-				int index = 0;
-				@Override
-				protected UUID generate() throws NoSuchElementException
-				{
-					if (index >= count())
-						throw new NoSuchElementException();
-					return get(index++).id;
-				}
-			};
-		}
-	};
 
 	public UUIDPositionIndex(MappedByteBuffer buffer)
 	{
@@ -105,6 +88,15 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 
 	public Iterable<UUID> uuids()
 	{
-		return this.iterable;
+		return new Generator<UUID>() {
+			int index = 0;
+			@Override
+			protected UUID generate() throws NoSuchElementException
+			{
+				if (index >= count())
+					throw new NoSuchElementException();
+				return get(index++).id;
+			}
+		};
 	}
 }

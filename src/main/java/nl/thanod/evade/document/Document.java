@@ -11,7 +11,7 @@ import nl.thanod.evade.query.Constraint;
 /**
  * @author nilsdijk
  */
-public abstract class Document
+public abstract class Document implements Comparable<Document>
 {
 	public static class Entry
 	{
@@ -63,16 +63,6 @@ public abstract class Document
 		}
 	}
 
-	public static Comparator<Document> VALUE_SORT = new Comparator<Document>() {
-		@Override
-		public int compare(Document o1, Document o2)
-		{
-			int diff = o1.type.code - o2.type.code;
-			if (diff != 0) return diff;
-			return o1.compareValue(o2);
-		}
-	};
-	
 	public final long version;
 	public final Type type;
 
@@ -230,7 +220,16 @@ public abstract class Document
 	public abstract boolean test(Constraint c);
 
 	public abstract void accept(DocumentVisitor visitor);
-	
+
+	@Override
+	public final int compareTo(Document o)
+	{
+		int diff = this.type.code - o.type.code;
+		if (diff != 0)
+			return diff;
+		return this.compareValue(o);
+	}
+
 	protected abstract int compareValue(Document other);
 
 	public Document path(List<String> path)

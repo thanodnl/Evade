@@ -9,13 +9,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import nl.thanod.evade.collection.index.Memdex;
 import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.Document.Entry;
-import nl.thanod.evade.query.Constraint;
+import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.util.Documenter;
-import nl.thanod.evade.util.Generator;
+import nl.thanod.evade.util.Linked;
 
 /**
  * @author nilsdijk
@@ -112,22 +110,10 @@ public class Table extends Collection
 		return count;
 	}
 
-	private static class LinkedEntry<T>
-	{
-		public final LinkedEntry<T> next;
-		public final T t;
-
-		public LinkedEntry(LinkedEntry<T> next, T t)
-		{
-			this.next = next;
-			this.t = t;
-		}
-	}
-
 	public void ensureStringIndex(List<String> path)
 	{
 		long time = System.nanoTime();
-		Map<String, LinkedEntry<UUID>> index = new TreeMap<String, LinkedEntry<UUID>>();
+		Map<String, Linked<UUID>> index = new TreeMap<String, Linked<UUID>>();
 		for (Document.Entry e : this) {
 			Document d = e.doc.path(path);
 			if (d == null)
@@ -135,7 +121,7 @@ public class Table extends Collection
 			if (d instanceof StringDocument) {
 				String value = ((StringDocument) d).value;
 				value = value.toLowerCase();
-				index.put(value, new LinkedEntry<UUID>(index.get(value), e.id));
+				index.put(value, new Linked<UUID>(index.get(value), e.id));
 			}
 		}
 		time = System.nanoTime() - time;
