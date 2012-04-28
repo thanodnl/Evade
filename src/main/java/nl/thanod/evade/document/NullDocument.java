@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.document;
 
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
@@ -59,5 +60,14 @@ public class NullDocument extends Document
 	protected int compareValue(Document other)
 	{
 		return 0;
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers.Modifier)
+	 */
+	@Override
+	public Document modify(Modifier m)
+	{
+		return this;
 	}
 }

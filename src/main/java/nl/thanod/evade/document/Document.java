@@ -5,6 +5,7 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
@@ -231,6 +232,8 @@ public abstract class Document implements Comparable<Document>
 	}
 
 	protected abstract int compareValue(Document other);
+	
+	public abstract Document modify(Modifier m);
 
 	public Document path(List<String> path)
 	{

@@ -9,7 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.thanod.evade.collection.Table;
+import nl.thanod.evade.collection.index.Index.Entry;
+import nl.thanod.evade.collection.index.SSIndex;
+import nl.thanod.evade.collection.index.Search;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.modifiers.LowerCase;
 import nl.thanod.evade.query.Constraint;
 import nl.thanod.evade.query.string.StartsWithConstraint;
@@ -22,26 +26,44 @@ public class Find
 	public static void main(String... args) throws IOException
 	{
 		Table t = Table.load(new File("data"), "out");
+		SSIndex index = new SSIndex(new File("data", "out0.idx"));
 
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
 		List<String> path = new ArrayList<String>();
 		path.add("name");
-		
-		t.ensureStringIndex(path);
+
 		for (int i = 0; i < 100; i++) {
-			int co = 0;
-			long start = System.nanoTime();
-			for (Document.Entry e : t) {
-				Document d = e.doc;
-				d = d.path(path);
-				if (d != null && d.test(c)) {
-					System.out.println(e);
-					co++;
+			long took = System.nanoTime();
+			Entry e = Search.binsearch(index, new Comparable<Entry>() {
+
+				@Override
+				public int compareTo(Entry o)
+				{
+					// TODO test! this could be in the incorrect order
+					int diff = o.match.type.code - Document.Type.STRING.code;
+					if (diff != 0)
+						return diff;
+
+					StringDocument sd = (StringDocument) o.match;
+					String s = "zh1";
+					return s.compareTo(sd.value);
 				}
+			});
+
+			e = e.next();
+			Document doc = t.get(e.id);
+			while (e.match.test(c)) {
+				Document q = doc.path(path);
+				if (!q.test(c))
+					continue; // data changed since indexed
+				System.out.println(new Document.Entry(e.id, doc));
+
+				e = e.next();
+				doc = t.get(e.id);
 			}
-			float took = (System.nanoTime() - start) / 1000000;
-			System.out.println("took: " + took + "ms");
-			System.out.println("found: " + co);
+
+			took = System.nanoTime() - took;
+			System.out.println("took: " + took + "ns (" + took / 1000000 + "ms)");
 		}
 	}
 }

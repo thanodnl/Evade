@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.document;
 
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
@@ -74,5 +75,17 @@ public class StringDocument extends Document
 	{
 		StringDocument sd = (StringDocument) other;
 		return this.value.compareTo(sd.value);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
+	 * .Modifier)
+	 */
+	@Override
+	public Document modify(Modifier m)
+	{
+		return new StringDocument(this.version, m.modify(this.value));
 	}
 }

@@ -7,6 +7,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -50,6 +51,19 @@ public class IndexHeader
 			this.setSortedIndexPosition(datapos);
 	}
 
+	public int getDataPosition()
+	{
+		return this.datapos;
+	}
+
+	/**
+	 * @return
+	 */
+	public int getDataSize()
+	{
+		return this.sindexpos - this.datapos;
+	}
+
 	public void setSortedIndexPosition(int sindexpos)
 	{
 		this.sindexpos = sindexpos;
@@ -57,11 +71,24 @@ public class IndexHeader
 			this.setUUIDIndexPosition(sindexpos);
 	}
 
+	/**
+	 * @return
+	 */
+	public int getSortedIndexSize()
+	{
+		return this.uuidpos - this.sindexpos;
+	}
+
 	public void setUUIDIndexPosition(int uuidpos)
 	{
 		this.uuidpos = uuidpos;
 		if (this.eofpos < uuidpos)
 			this.setEOFPosition(uuidpos);
+	}
+
+	public int getUUIDSize()
+	{
+		return this.eofpos - this.uuidpos;
 	}
 
 	public void setEOFPosition(int eofpos)
@@ -85,7 +112,7 @@ public class IndexHeader
 
 	/**
 	 * @param raf
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public MappedByteBuffer mapData(RandomAccessFile raf) throws IOException
 	{
@@ -95,11 +122,51 @@ public class IndexHeader
 	/**
 	 * @param channel
 	 * @return
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	private MappedByteBuffer mapData(FileChannel channel) throws IOException
 	{
-		return channel.map(MapMode.READ_ONLY, this.datapos, this.sindexpos - this.datapos);
+		return channel.map(MapMode.READ_ONLY, this.datapos, getDataSize());
+	}
+
+	/**
+	 * @param raf
+	 * @return
+	 * @throws IOException
+	 */
+	public ByteBuffer mapSortedIndex(RandomAccessFile raf) throws IOException
+	{
+		return mapSortedIndex(raf.getChannel());
+	}
+
+	/**
+	 * @param channel
+	 * @return
+	 * @throws IOException
+	 */
+	private ByteBuffer mapSortedIndex(FileChannel channel) throws IOException
+	{
+		return channel.map(MapMode.READ_ONLY, this.sindexpos, getSortedIndexSize());
+	}
+
+	/**
+	 * @param raf
+	 * @return
+	 * @throws IOException
+	 */
+	public ByteBuffer mapUUIDIndex(RandomAccessFile raf) throws IOException
+	{
+		return mapUUIDIndex(raf.getChannel());
+	}
+
+	/**
+	 * @param channel
+	 * @return
+	 * @throws IOException
+	 */
+	private ByteBuffer mapUUIDIndex(FileChannel channel) throws IOException
+	{
+		return channel.map(MapMode.READ_ONLY, this.uuidpos, getUUIDSize());
 	}
 
 }

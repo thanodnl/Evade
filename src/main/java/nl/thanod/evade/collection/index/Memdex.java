@@ -27,7 +27,7 @@ public class Memdex
 
 	public static void persistSortedIndex(Iterable<Document.Entry> data, List<String> path, Constraint constraint) throws IOException
 	{
-		Modifier mod = constraint.getModifier();
+		Modifier modifier = constraint.getModifier();
 
 		File temp = File.createTempFile("eva_", ".idx");
 		System.out.println(temp);
@@ -36,7 +36,7 @@ public class Memdex
 
 		// write the temporary index to temp
 		// and get an offset of entries from it
-		List<Long> offsets = writeTempIndex(tempraf, data, path);
+		List<Long> offsets = writeTempIndex(tempraf, data, path, modifier);
 
 		// map data into memory for sorting
 		final ByteBuffer tmap = tempraf.getChannel().map(MapMode.READ_ONLY, 0, tempraf.getFilePointer());
@@ -73,7 +73,7 @@ public class Memdex
 			tmap.position(pos.intValue());
 
 			// put the offset in the sindex
-			sindex.add(raf.getFilePointer());
+			sindex.add(raf.getFilePointer() - indexHeader.getDataPosition());
 
 			// copy the uuid
 			raf.writeLong(tmap.getLong());
@@ -134,7 +134,7 @@ public class Memdex
 		}
 	}
 
-	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, List<String> path) throws IOException
+	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, List<String> path, Modifier modifier) throws IOException
 	{
 		List<Long> offsets = new ArrayList<Long>();
 		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(temp);
@@ -146,8 +146,8 @@ public class Memdex
 			// do not index dict documents, instead make it a null index
 			if (doc.type == Type.DICT)
 				doc = new NullDocument(doc.version);
-
-			// TODO modify the document
+			
+			doc = doc.modify(modifier);
 
 			// safe the index of the beginning of the entry
 			offsets.add(temp.getFilePointer());
