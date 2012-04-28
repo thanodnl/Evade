@@ -42,7 +42,7 @@ public abstract class Document
 	public enum Type
 	{
 		NULL(0x00, true),
-		DOCUMENT(0x01, false),
+		DICT(0x01, false),
 		STRING(0x0F, true);
 
 		public final int code;
@@ -63,6 +63,16 @@ public abstract class Document
 		}
 	}
 
+	public static Comparator<Document> VALUE_SORT = new Comparator<Document>() {
+		@Override
+		public int compare(Document o1, Document o2)
+		{
+			int diff = o1.type.code - o2.type.code;
+			if (diff != 0) return diff;
+			return o1.compareValue(o2);
+		}
+	};
+	
 	public final long version;
 	public final Type type;
 
@@ -220,6 +230,8 @@ public abstract class Document
 	public abstract boolean test(Constraint c);
 
 	public abstract void accept(DocumentVisitor visitor);
+	
+	protected abstract int compareValue(Document other);
 
 	public Document path(List<String> path)
 	{

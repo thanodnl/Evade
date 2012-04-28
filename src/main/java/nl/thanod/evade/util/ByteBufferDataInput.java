@@ -20,7 +20,6 @@ public class ByteBufferDataInput implements DataInput
 	public ByteBufferDataInput(ByteBuffer buffer)
 	{
 		this.buffer = buffer;
-
 	}
 
 	/*

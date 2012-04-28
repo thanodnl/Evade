@@ -81,7 +81,7 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 	{
 		try {
 			// general document information
-			this.out.write(Document.Type.DOCUMENT.code);
+			this.out.write(Document.Type.DICT.code);
 
 			for (Map.Entry<String, Document> e : doc.entrySet()) {
 				this.out.write(0xFF); // entry following
@@ -110,7 +110,7 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 					return new NullDocument(stream.readLong());
 				case STRING:
 					return new StringDocument(stream.readLong(), stream.readUTF());
-				case DOCUMENT:
+				case DICT:
 					Map<String, Document> map = new TreeMap<String, Document>();
 					while (stream.readByte() != 0)
 						map.put(stream.readUTF(), deserialize(stream));

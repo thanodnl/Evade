@@ -3,15 +3,20 @@
  */
 package nl.thanod.evade.collection.index;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel.MapMode;
+import java.util.*;
 
-import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.StringDocument;
+import nl.thanod.evade.document.*;
+import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.document.Document.Type;
 import nl.thanod.evade.document.modifiers.Modifier;
+import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.query.Constraint;
+import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.Linked;
 
 /**
@@ -28,34 +33,96 @@ public class Memdex implements Index
 		this.modifier = modifier;
 	}
 
-	public static Memdex createSorted(Iterable<Document.Entry> data, List<String> path, Constraint constraint)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.collection.index.Index#before(nl.thanod.evade.document
+	 * .Document)
+	 */
+	@Override
+	public Iterable<Entry> before(Document doc)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public static void persistSortedIndex(Iterable<Document.Entry> c, List<String> path, Constraint constraint) throws IOException
 	{
 		Modifier mod = constraint.getModifier();
 
-		Map<StringDocument, Linked<UUID>> map = new TreeMap<StringDocument, Linked<UUID>>(StringDocument.VALUE_SORT);
+		File file = new File("data", "out0.index");
 
-		for (Document.Entry e : data) {
+		final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+
+		List<Long> offsets = new ArrayList<Long>();
+
+		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
+		// write the uuid index
+
+		System.out.println("start persisting");
+		for (Document.Entry e : c) {
 			Document doc = e.doc.path(path);
-			if (doc == null || !doc.type.valuetype)
+			if (doc == null)
 				continue;
 
-			// for developing only, should be refoctored to support all value types
-			// need a comparator on content and type for this
-			if (!(doc instanceof StringDocument))
-				continue;
+			// do not index dict documents, instead make it a null index
+			if (doc.type == Type.DICT)
+				doc = new NullDocument(doc.version);
 
-			// extract the value to index
-			StringDocument sd = (StringDocument) doc;
-			String s = sd.value;
-			s = mod.modify(s);
+			// TODO modify the document
 
-			sd = new StringDocument(sd.version, s);
+			// safe the index of the beginning of the entry
+			offsets.add(raf.getFilePointer());
 
-			// put it in the map
-			map.put(sd, new Linked<UUID>(map.get(sd), e.id));
+			// write the address of the indexed object
+			raf.writeLong(e.id.getMostSignificantBits());
+			raf.writeLong(e.id.getLeastSignificantBits());
+
+			// write the contents of the document
+			doc.accept(dsv);
 		}
+		System.out.println("started sorting");
 
-		// return an index
-		return new Memdex(map, mod);
+		long took = System.nanoTime();
+
+		// map data into memory for sorting
+		final ByteBuffer map = raf.getChannel().map(MapMode.READ_ONLY, 0, raf.getFilePointer());
+		final ByteBufferDataInput di = new ByteBufferDataInput(map);
+
+		// sort the indexlist
+		Collections.sort(offsets, new Comparator<Long>() {
+			@Override
+			public int compare(Long o1, Long o2)
+			{
+				Document d1;
+				try {
+					map.position(o1.intValue() + 16); // offset of 16 for the uuid
+					d1 = DocumentSerializerVisitor.deserialize(di);
+				} catch (Exception ball) {
+					return -1;
+				}
+
+				Document d2;
+				try {
+					map.position(o2.intValue() + 16); // offset of 16 for the uuid
+					d2 = DocumentSerializerVisitor.deserialize(di);
+				} catch (Exception ball) {
+					return 1;
+				}
+
+				return Document.VALUE_SORT.compare(d1, d2);
+			}
+		});
+		took = System.nanoTime() - took;
+
+		System.out.println("Sorted in " + took + "ns (" + took / 1000000 + "ms)");
+
+		for (Long pos : offsets) {
+			raf.writeInt(pos.intValue());
+		}
+		raf.close();
+		System.out.println("data written");
+
+		// write the sorted list
 	}
 }

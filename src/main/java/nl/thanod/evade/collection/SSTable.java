@@ -174,4 +174,13 @@ public class SSTable extends Collection
 	{
 		return this.index.count();
 	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		return this.index.uuids();
+	}
 }

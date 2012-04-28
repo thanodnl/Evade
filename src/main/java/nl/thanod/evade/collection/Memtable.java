@@ -103,4 +103,13 @@ public class Memtable extends Collection
 	{
 		return this.docs.size();
 	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		return Collections.unmodifiableSet(this.docs.keySet());
+	}
 }

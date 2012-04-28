@@ -9,10 +9,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import nl.thanod.evade.collection.index.Memdex;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.query.Constraint;
 import nl.thanod.evade.util.Documenter;
+import nl.thanod.evade.util.Generator;
 
 /**
  * @author nilsdijk
@@ -164,5 +167,15 @@ public class Table extends Collection
 			}
 		}
 		return t;
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		// not yet implemented
+		throw new UnsupportedOperationException();
 	}
 }
