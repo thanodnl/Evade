@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.util.UUID;
 
 import nl.thanod.evade.collection.index.Index.Entry;

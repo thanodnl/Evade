@@ -3,7 +3,7 @@
  */
 package nl.thanod.evade.collection.index;
 
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -36,9 +36,9 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 	}
 
 	public static final int INDEXSIZE = 16 + 4;
-	private final MappedByteBuffer buffer;
+	private final ByteBuffer buffer;
 
-	public UUIDPositionIndex(MappedByteBuffer buffer)
+	public UUIDPositionIndex(ByteBuffer buffer)
 	{
 		this.buffer = buffer;
 		//		this.validate();

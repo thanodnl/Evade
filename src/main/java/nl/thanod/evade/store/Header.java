@@ -79,9 +79,9 @@ public class Header
 	{
 	}
 
-	public void put(Type type, int position)
+	public void put(Type type, long position)
 	{
-		Entry header = new Entry(type, position);
+		Entry header = new Entry(type, (int)position);
 		if (this.last != null) {
 			this.last.setNext(header);
 			this.last = header;
