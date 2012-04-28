@@ -50,13 +50,14 @@ public class Memdex implements Index
 	{
 		Modifier mod = constraint.getModifier();
 
-		File file = new File("data", "out0.index");
+		File temp = File.createTempFile("eva_", ".idx");
+		System.out.println(temp);
 
-		final RandomAccessFile raf = new RandomAccessFile(file, "rw");
+		RandomAccessFile traf = new RandomAccessFile(temp, "rw");
 
 		List<Long> offsets = new ArrayList<Long>();
 
-		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
+		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(traf);
 		// write the uuid index
 
 		System.out.println("start persisting");
@@ -72,11 +73,11 @@ public class Memdex implements Index
 			// TODO modify the document
 
 			// safe the index of the beginning of the entry
-			offsets.add(raf.getFilePointer());
+			offsets.add(traf.getFilePointer());
 
 			// write the address of the indexed object
-			raf.writeLong(e.id.getMostSignificantBits());
-			raf.writeLong(e.id.getLeastSignificantBits());
+			traf.writeLong(e.id.getMostSignificantBits());
+			traf.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
 			doc.accept(dsv);
@@ -86,8 +87,8 @@ public class Memdex implements Index
 		long took = System.nanoTime();
 
 		// map data into memory for sorting
-		final ByteBuffer map = raf.getChannel().map(MapMode.READ_ONLY, 0, raf.getFilePointer());
-		final ByteBufferDataInput di = new ByteBufferDataInput(map);
+		final ByteBuffer tmap = traf.getChannel().map(MapMode.READ_ONLY, 0, traf.getFilePointer());
+		final ByteBufferDataInput tdi = new ByteBufferDataInput(tmap);
 
 		// sort the indexlist
 		Collections.sort(offsets, new Comparator<Long>() {
@@ -96,16 +97,16 @@ public class Memdex implements Index
 			{
 				Document d1;
 				try {
-					map.position(o1.intValue() + 16); // offset of 16 for the uuid
-					d1 = DocumentSerializerVisitor.deserialize(di);
+					tmap.position(o1.intValue() + 16); // offset of 16 for the uuid
+					d1 = DocumentSerializerVisitor.deserialize(tdi);
 				} catch (Exception ball) {
 					return -1;
 				}
 
 				Document d2;
 				try {
-					map.position(o2.intValue() + 16); // offset of 16 for the uuid
-					d2 = DocumentSerializerVisitor.deserialize(di);
+					tmap.position(o2.intValue() + 16); // offset of 16 for the uuid
+					d2 = DocumentSerializerVisitor.deserialize(tdi);
 				} catch (Exception ball) {
 					return 1;
 				}
@@ -117,12 +118,93 @@ public class Memdex implements Index
 
 		System.out.println("Sorted in " + took + "ns (" + took / 1000000 + "ms)");
 
-		for (Long pos : offsets) {
-			raf.writeInt(pos.intValue());
-		}
-		raf.close();
-		System.out.println("data written");
+		// list to hold the starts of every index item
+		List<Long> sindex = new LinkedList<Long>();
 
-		// write the sorted list
+		// write the final index
+		File file = new File("data", "out0.idx");
+		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+
+		// reserve some room for the index table
+		raf.writeInt(0); // placeholder for the start of the sorted data
+		raf.writeInt(0); // placeholder for the start of the sindex
+		raf.writeInt(0); // placeholder for the start of the uuidindex
+		raf.writeInt(0); // placeholder for the eof
+
+		int datapos = (int) raf.getFilePointer();
+
+		dsv = new DocumentSerializerVisitor(raf);
+		for (Long pos : offsets) {
+			tmap.position(pos.intValue());
+
+			// put the offset in the sindex
+			sindex.add(raf.getFilePointer());
+
+			// copy the uuid
+			raf.writeLong(tmap.getLong());
+			raf.writeLong(tmap.getLong());
+
+			// copy the document
+			Document doc = DocumentSerializerVisitor.deserialize(tdi);
+			doc.accept(dsv);
+		}
+
+		// write the sindex to file
+		int sindexpos = (int) raf.getFilePointer();
+		for (Long pos : sindex)
+			raf.writeInt(pos.intValue());
+
+		int uuidpos = (int) raf.getFilePointer();
+
+		// TODO write an offset table for the ordered uuid's
+		// map the contents to memory
+		final ByteBuffer map = raf.getChannel().map(MapMode.READ_ONLY, datapos, sindexpos - datapos);
+		final ByteBufferDataInput di = new ByteBufferDataInput(map);
+
+		// sort the sindex to uuid
+		Collections.sort(sindex, new Comparator<Long>() {
+
+			@Override
+			public int compare(Long o1, Long o2)
+			{
+				map.position(o1.intValue());
+				UUID uuid1 = new UUID(map.getLong(), map.getLong());
+
+				map.position(o2.intValue());
+				UUID uuid2 = new UUID(map.getLong(), map.getLong());
+
+				return uuid1.compareTo(uuid2);
+			}
+		});
+		
+		// write the uuid's offsettable
+		for (Long pos : sindex)
+			raf.writeInt(pos.intValue());
+
+		int eofpos = (int) raf.getFilePointer();
+
+		// update the index table
+		raf.seek(0);
+		raf.writeInt(datapos); // the start of the sorted data
+		raf.writeInt(sindexpos); // the start of the sindex
+		raf.writeInt(uuidpos); // the start of the uuidindex
+		raf.writeInt(eofpos); // the eof
+
+		// remove temp files
+		try {
+			raf.close();
+		} catch (IOException ball) {
+		}
+		try {
+			traf.close();
+		} catch (IOException ball) {
+		}
+		try {
+			temp.delete();
+		} catch (Exception ball) {
+			// file could not be removed
+			ball.printStackTrace(); // TODO make better debugging for this
+			temp.deleteOnExit(); // be sure to remove the file when the jvm quits
+		}
 	}
 }
