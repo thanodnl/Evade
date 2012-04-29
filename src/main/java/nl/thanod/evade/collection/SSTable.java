@@ -15,6 +15,7 @@ import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.store.BloomFilter;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.Generator;
@@ -33,6 +34,7 @@ public class SSTable extends Collection
 
 	protected final UUIDPositionIndex index;
 	private final ByteBuffer datamap;
+	private final BloomFilter bloom;
 
 	private final UUID min;
 	private final UUID max;
@@ -46,13 +48,14 @@ public class SSTable extends Collection
 
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
-		index = new UUIDPositionIndex(header.map(raf, Header.Type.UUID_INDEX));
+		this.index = new UUIDPositionIndex(header.map(raf, Header.Type.UUID_INDEX));
 
 		this.min = this.index.get(0).id;
 		this.max = this.index.get(this.index.count() - 1).id;
 
 		// the beginning of the file to the start of the index is the datapart of the file
-		datamap = header.map(raf, Header.Type.DATA);
+		this.datamap = header.map(raf, Header.Type.DATA);
+		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
 	}
 
 	/*
@@ -62,6 +65,8 @@ public class SSTable extends Collection
 	@Override
 	public boolean contains(UUID id)
 	{
+		if (this.bloom != null && !this.bloom.contains(BloomFilter.bloom(id, this.bloom.hashCount())))
+			return false;
 		if (this.min.compareTo(id) > 0 || this.max.compareTo(id) < 0)
 			return false;
 		return this.index.before(id).id.equals(id);
@@ -74,6 +79,9 @@ public class SSTable extends Collection
 	@Override
 	public Document get(UUID id)
 	{
+		if (this.bloom != null && !this.bloom.contains(BloomFilter.bloom(id, this.bloom.hashCount())))
+			return null;
+
 		Pointer p = this.index.before(id);
 		if (!p.id.equals(id))
 			return null;
@@ -131,7 +139,7 @@ public class SSTable extends Collection
 			RandomAccessFile raf = new RandomAccessFile(f, "rw");
 			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
 
-			Header.reserve(raf, 3);
+			Header.reserve(raf, 4);
 
 			Header header = new Header();
 
@@ -149,13 +157,21 @@ public class SSTable extends Collection
 
 			header.put(Header.Type.UUID_INDEX, raf.getFilePointer());
 
+			BloomFilter bloom = BloomFilter.optimal(index.size(), 5);
+
 			// write the index
 			for (Map.Entry<UUID, Integer> e : index.entrySet()) {
+				if (bloom != null)
+					bloom.put(BloomFilter.bloom(e.getKey(), bloom.hashCount()));
+
 				raf.writeLong(e.getKey().getMostSignificantBits());
 				raf.writeLong(e.getKey().getLeastSignificantBits());
 				raf.writeInt(e.getValue());
 			}
 
+			header.put(Header.Type.BLOOM, raf.getFilePointer());
+			if (bloom != null)
+				bloom.write(raf);
 			header.put(Header.Type.EOF, raf.getFilePointer());
 
 			// the offset where the index starts

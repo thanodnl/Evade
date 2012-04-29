@@ -122,4 +122,43 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 			throw new RuntimeException(ball);
 		}
 	}
+
+	/**
+	 * Move a document from one source to another without fully deserializing
+	 * @param in
+	 * @param out
+	 */
+	public static void move(DataInput in, DataOutput out)
+	{
+		int temp;
+		try {
+			int code = in.readByte() & 0xFF;
+			Document.Type type = Document.Type.getByCode(code);
+			switch (type) {
+				case NULL:
+					out.writeByte(code);
+					out.writeLong(in.readLong());
+					break;
+				case STRING:
+					out.writeByte(code);
+					out.writeLong(in.readLong());
+					out.writeUTF(in.readUTF());
+					break;
+				case DICT:
+					out.writeByte(code);
+					while ((temp = in.readByte()) != 0) {
+						out.writeByte(temp);
+						out.writeUTF(in.readUTF());
+						move(in, out);
+					}
+					out.writeByte(temp);
+					out.writeLong(in.readLong());
+					break;
+				default:
+					throw new ProtocolException("unknown type: " + type + " (#" + code + ")");
+			}
+		} catch (IOException ball) {
+			throw new RuntimeException(ball);
+		}
+	}
 }

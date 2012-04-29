@@ -69,7 +69,6 @@ public class Memdex
 		int offset = (int) raf.getFilePointer();
 		indexHeader.put(Header.Type.DATA, offset);
 
-		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
 		ByteBufferDataInput tdi = new ByteBufferDataInput(tmap);
 		for (Long pos : offsets) {
 			tmap.position(pos.intValue());
@@ -82,8 +81,7 @@ public class Memdex
 			raf.writeLong(tmap.getLong());
 
 			// copy the document
-			Document doc = DocumentSerializerVisitor.deserialize(tdi);
-			doc.accept(dsv);
+			DocumentSerializerVisitor.move(tdi, raf);
 		}
 
 		// put the sorted index starting position in the header

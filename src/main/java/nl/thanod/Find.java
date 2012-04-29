@@ -25,8 +25,10 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
-		Table t = Table.load(new File("data"), "out");
-		SSIndex index = new SSIndex(new File("data", "out0.idx"));
+		File data = new File ("data");
+		
+		Table t = Table.load(data, "out");
+		SSIndex index = new SSIndex(new File(data, "out0.idx"));
 
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
 		List<String> path = new ArrayList<String>();

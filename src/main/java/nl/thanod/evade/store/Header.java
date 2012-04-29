@@ -21,6 +21,7 @@ public class Header
 		DATA(1),
 		SORTED_INDEX(2),
 		UUID_INDEX(3),
+		BLOOM(4),
 		EOF(0xFF);
 
 		public final int code;
@@ -62,7 +63,10 @@ public class Header
 			if (this.next == null)
 				throw new IllegalStateException("Can't map the last file entry");
 			try {
-				return channel.map(MapMode.READ_ONLY, this.start, next.start - this.start);
+				long size = next.start - this.start;
+				if (size <= 0)
+					return null;
+				return channel.map(MapMode.READ_ONLY, this.start, size);
 			} catch (IOException ball) {
 				return null;
 			}
@@ -81,7 +85,7 @@ public class Header
 
 	public void put(Type type, long position)
 	{
-		Entry header = new Entry(type, (int)position);
+		Entry header = new Entry(type, (int) position);
 		if (this.last != null) {
 			this.last.setNext(header);
 			this.last = header;
@@ -125,10 +129,10 @@ public class Header
 
 	public static void reserve(DataOutput out, int entryCount) throws IOException
 	{
+		out.writeInt(0);
+		for (int i = 0; i < entryCount; i++) {
+			out.writeByte(0);
 			out.writeInt(0);
-			for (int i = 0; i < entryCount; i++) {
-				out.writeByte(0);
-				out.writeInt(0);
-			}
+		}
 	}
 }
