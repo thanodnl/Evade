@@ -50,14 +50,18 @@ public class Find
 				}
 			});
 
-			e = e.next();
+			// is going wrong when there are multiple entries on the same index
+			if (!e.match.test(c))
+				e = e.next();
 			Document doc = t.get(e.id);
 			while (e.match.test(c)) {
-				Document q = doc.path(path);
-				if (!q.test(c))
-					continue; // data changed since indexed
-				System.out.println(new Document.Entry(e.id, doc));
+				if (doc != null) {
+					Document q = doc.path(path);
+					if (q.test(c)) {
 
+						System.out.println(new Document.Entry(e.id, doc));
+					}
+				}
 				e = e.next();
 				doc = t.get(e.id);
 			}

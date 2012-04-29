@@ -6,8 +6,7 @@ package nl.thanod;
 import java.io.*;
 import java.util.UUID;
 
-import nl.thanod.evade.collection.Memtable;
-import nl.thanod.evade.collection.SSTable;
+import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.document.DocumentBuilder;
 
 /**
@@ -24,18 +23,12 @@ public class Names
 		String line;
 		int c = 0;
 
-		Memtable table = new Memtable();
+		Table table = Table.load(new File("data"), "out");
 		while ((line = r.readLine()) != null) {
 			table.update(UUID.randomUUID(), DocumentBuilder.start(System.currentTimeMillis()).put("name", line).make());
 			c++;
-			if (c >= 50000){
-				System.out.println(SSTable.save(table));
-				table = new Memtable();
-				c = 0;
-			}
 		}
-		System.out.println(SSTable.save(table));
-
+		table.persist();
 
 		System.out.println("lines: " + c);
 	}

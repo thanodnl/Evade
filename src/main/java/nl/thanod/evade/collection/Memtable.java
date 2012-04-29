@@ -52,7 +52,7 @@ public class Memtable extends Collection
 		}
 	}
 
-	public void update(UUID id, Document doc)
+	public Memtable update(UUID id, Document doc)
 	{
 		this.rwl.writeLock().lock();
 		try {
@@ -62,6 +62,7 @@ public class Memtable extends Collection
 		} finally {
 			this.rwl.writeLock().unlock();
 		}
+		return this;
 	}
 
 	/*

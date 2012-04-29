@@ -27,7 +27,6 @@ public class Scan
 		List<String> path = new ArrayList<String>();
 		path.add("name");
 		
-//		t.ensureStringIndex(path);
 		for (int i = 0; i < 100; i++) {
 			int co = 0;
 			long start = System.nanoTime();

@@ -5,15 +5,17 @@ package nl.thanod.evade.collection;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
-import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.util.Documenter;
-import nl.thanod.evade.util.Linked;
 
 /**
  * @author nilsdijk
@@ -24,9 +26,15 @@ public class Table extends Collection
 	protected List<SSTable> sstables;
 	protected volatile Memtable memtable;
 
-	public Table()
+	private final File directory;
+	private final String name;
+
+	private Table(File directory, String name)
 	{
-		sstables = new LinkedList<SSTable>();
+		this.directory = directory;
+		this.name = name;
+
+		this.sstables = new LinkedList<SSTable>();
 	}
 
 	private void addSSTable(SSTable ss)
@@ -56,6 +64,36 @@ public class Table extends Collection
 	public void update(UUID id, Document doc)
 	{
 		getMemtable().update(id, doc);
+		if (getMemtable().size() >= 50000) { // persist the table
+			persist();
+		}
+	}
+
+	/**
+	 * @param old
+	 */
+	private void compact(Memtable old)
+	{
+		try {
+			// save the tables
+			for (File sstable : SSTable.save(old)) {
+				// and add all created tables for resolving
+				this.addSSTable(new SSTable(sstable));
+				System.out.println(sstable);
+			}
+		} catch (FileNotFoundException ball) {
+			ball.printStackTrace();
+		} catch (IOException ball) {
+			ball.printStackTrace();
+		}
+	}
+
+	public void persist()
+	{
+		Memtable old = getMemtable();
+		// put a new memtable in place for further writes
+		this.memtable = new Memtable();
+		compact(old);
 	}
 
 	/*
@@ -110,29 +148,20 @@ public class Table extends Collection
 		return count;
 	}
 
-	public void ensureStringIndex(List<String> path)
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
 	{
-		long time = System.nanoTime();
-		Map<String, Linked<UUID>> index = new TreeMap<String, Linked<UUID>>();
-		for (Document.Entry e : this) {
-			Document d = e.doc.path(path);
-			if (d == null)
-				continue;
-			if (d instanceof StringDocument) {
-				String value = ((StringDocument) d).value;
-				value = value.toLowerCase();
-				index.put(value, new Linked<UUID>(index.get(value), e.id));
-			}
-		}
-		time = System.nanoTime() - time;
-		
-		System.out.println("sorting the index took: " + time + "ns (" + (time/1000000) + "ms)");
-		System.out.println(index.size());
+		// not yet implemented
+		throw new UnsupportedOperationException();
 	}
 
 	public static Table load(final File dir, final String name)
 	{
-		Table t = new Table();
+		Table t = new Table(dir, name);
 		File[] files = dir.listFiles(new FileFilter() {
 			final Pattern p = Pattern.compile(name + "\\d+\\.sstable");
 
@@ -153,15 +182,5 @@ public class Table extends Collection
 			}
 		}
 		return t;
-	}
-
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.collection.Collection#ids()
-	 */
-	@Override
-	public Iterable<UUID> uuids()
-	{
-		// not yet implemented
-		throw new UnsupportedOperationException();
 	}
 }
