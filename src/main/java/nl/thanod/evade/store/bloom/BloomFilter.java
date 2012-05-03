@@ -1,7 +1,7 @@
 /**
  * 
  */
-package nl.thanod.evade.store;
+package nl.thanod.evade.store.bloom;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -87,62 +87,6 @@ public class BloomFilter
 		this.backed.position(0);
 
 		out.write(buffer);
-	}
-
-	public static int[] bloom(UUID uuid, final int hashes)
-	{
-		byte[] data = data(uuid);
-
-		int seed = 0;
-		int[] bloom = new int[hashes];
-		for (int i = 0; i < hashes; i++)
-			bloom[i] = seed = MurmurHash3.murmurhash3_x86_32(data, 0, 16, seed);
-		return bloom;
-	}
-
-	public static int[] bloom(int[] prev, UUID uuid, final int hashes)
-	{
-		if (hashes <= prev.length)
-			return prev;
-
-		byte[] data = data(uuid);
-
-		int[] bloom = new int[hashes];
-		System.arraycopy(prev, 0, bloom, 0, prev.length);
-
-		int seed = prev[prev.length - 1];
-		for (int i = prev.length; i < hashes; i++)
-			bloom[i] = seed = MurmurHash3.murmurhash3_x86_32(data, 0, 16, seed);
-		return bloom;
-	}
-
-	/**
-	 * @param uuid
-	 * @return
-	 */
-	private static byte[] data(UUID uuid)
-	{
-		byte[] data = new byte[16];
-		long d = uuid.getMostSignificantBits();
-		data[0] = (byte) ((d >> 56) & 0xFF);
-		data[1] = (byte) ((d >> 48) & 0xFF);
-		data[2] = (byte) ((d >> 40) & 0xFF);
-		data[3] = (byte) ((d >> 32) & 0xFF);
-		data[4] = (byte) ((d >> 24) & 0xFF);
-		data[5] = (byte) ((d >> 16) & 0xFF);
-		data[6] = (byte) ((d >> 8) & 0xFF);
-		data[7] = (byte) ((d >> 0) & 0xFF);
-
-		d = uuid.getLeastSignificantBits();
-		data[8] = (byte) ((d >> 56) & 0xFF);
-		data[9] = (byte) ((d >> 48) & 0xFF);
-		data[10] = (byte) ((d >> 40) & 0xFF);
-		data[11] = (byte) ((d >> 32) & 0xFF);
-		data[12] = (byte) ((d >> 24) & 0xFF);
-		data[13] = (byte) ((d >> 16) & 0xFF);
-		data[14] = (byte) ((d >> 8) & 0xFF);
-		data[15] = (byte) ((d >> 0) & 0xFF);
-		return data;
 	}
 
 	/**

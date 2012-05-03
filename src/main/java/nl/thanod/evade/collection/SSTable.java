@@ -15,8 +15,10 @@ import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
-import nl.thanod.evade.store.BloomFilter;
 import nl.thanod.evade.store.Header;
+import nl.thanod.evade.store.bloom.Bloom;
+import nl.thanod.evade.store.bloom.BloomFilter;
+import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.Generator;
 
@@ -58,6 +60,11 @@ public class SSTable extends Collection
 		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
 	}
 
+	public boolean earlySkip(Bloom<?> bloom)
+	{
+		return !(this.bloom != null && bloom.containedBy(this.bloom));
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see nl.thanod.evade.collection.Collection#contains(java.util.UUID)
@@ -65,8 +72,6 @@ public class SSTable extends Collection
 	@Override
 	public boolean contains(UUID id)
 	{
-		if (this.bloom != null && !this.bloom.contains(BloomFilter.bloom(id, this.bloom.hashCount())))
-			return false;
 		if (this.min.compareTo(id) > 0 || this.max.compareTo(id) < 0)
 			return false;
 		return this.index.before(id).id.equals(id);
@@ -79,9 +84,6 @@ public class SSTable extends Collection
 	@Override
 	public Document get(UUID id)
 	{
-		if (this.bloom != null && !this.bloom.contains(BloomFilter.bloom(id, this.bloom.hashCount())))
-			return null;
-
 		Pointer p = this.index.before(id);
 		if (!p.id.equals(id))
 			return null;
@@ -162,7 +164,7 @@ public class SSTable extends Collection
 			// write the index
 			for (Map.Entry<UUID, Integer> e : index.entrySet()) {
 				if (bloom != null)
-					bloom.put(BloomFilter.bloom(e.getKey(), bloom.hashCount()));
+					new Bloom<UUID>(e.getKey(), BloomHasher.UUID).putIn(bloom);
 
 				raf.writeLong(e.getKey().getMostSignificantBits());
 				raf.writeLong(e.getKey().getLeastSignificantBits());

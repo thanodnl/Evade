@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.store.bloom.Bloom;
+import nl.thanod.evade.store.bloom.BloomFilter;
+import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
 
 /**
@@ -113,8 +116,9 @@ public class Table extends Collection
 	@Override
 	public boolean contains(UUID id)
 	{
+		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		for (SSTable ss : this.sstables)
-			if (ss.contains(id))
+			if (!ss.earlySkip(bloom) && ss.contains(id))
 				return true;
 		return getMemtable().contains(id);
 	}
@@ -126,11 +130,14 @@ public class Table extends Collection
 	@Override
 	public Document get(UUID id)
 	{
+		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		Document doc = null;
-		for (SSTable ss : this.sstables)
+		for (SSTable ss : this.sstables) {
+			if (ss.earlySkip(bloom))
+				continue;
 			doc = Document.merge(doc, ss.get(id));
+		}
 		doc = Document.merge(doc, getMemtable().get(id));
-
 		return doc;
 	}
 

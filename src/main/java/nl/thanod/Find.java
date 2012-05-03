@@ -25,8 +25,8 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
-		File data = new File ("data");
-		
+		File data = new File("data");
+
 		Table t = Table.load(data, "out");
 		SSIndex index = new SSIndex(new File(data, "out0.idx"));
 
@@ -34,23 +34,26 @@ public class Find
 		List<String> path = new ArrayList<String>();
 		path.add("name");
 
+		Comparable<Entry> search = new Comparable<Entry>() {
+
+			@Override
+			public int compareTo(Entry o)
+			{
+				// TODO test! this could be in the incorrect order
+				int diff = o.match.type.code - Document.Type.STRING.code;
+				if (diff != 0)
+					return diff;
+
+				StringDocument sd = (StringDocument) o.match;
+				String s = "zh1";
+				return s.compareTo(sd.value);
+			}
+		};
+
 		for (int i = 0; i < 100; i++) {
+			int found = 0;
 			long took = System.nanoTime();
-			Entry e = Search.binsearch(index, new Comparable<Entry>() {
-
-				@Override
-				public int compareTo(Entry o)
-				{
-					// TODO test! this could be in the incorrect order
-					int diff = o.match.type.code - Document.Type.STRING.code;
-					if (diff != 0)
-						return diff;
-
-					StringDocument sd = (StringDocument) o.match;
-					String s = "zh1";
-					return s.compareTo(sd.value);
-				}
-			});
+			Entry e = Search.binsearch(index, search);
 
 			// is going wrong when there are multiple entries on the same index
 			if (!e.match.test(c))
@@ -60,8 +63,9 @@ public class Find
 				if (doc != null) {
 					Document q = doc.path(path);
 					if (q.test(c)) {
-
-						System.out.println(new Document.Entry(e.id, doc));
+						found++;
+						Document.Entry de = new Document.Entry(e.id, doc);
+						//System.out.println(de);
 					}
 				}
 				e = e.next();
@@ -69,7 +73,7 @@ public class Find
 			}
 
 			took = System.nanoTime() - took;
-			System.out.println("took: " + took + "ns (" + took / 1000000 + "ms)");
+			System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + found);
 		}
 	}
 }

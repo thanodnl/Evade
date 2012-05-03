@@ -23,7 +23,7 @@ public final class Search
 	}
 
 	/**
-	 * implementation of a binary search
+	 * implementation of a binary search which works on a sorted set
 	 * @param scope
 	 * @param compare
 	 * @return
