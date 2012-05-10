@@ -5,13 +5,14 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
  */
-public abstract class Document
+public abstract class Document implements Comparable<Document>
 {
 	public static class Entry
 	{
@@ -42,7 +43,7 @@ public abstract class Document
 	public enum Type
 	{
 		NULL(0x00, true),
-		DOCUMENT(0x01, false),
+		DICT(0x01, false),
 		STRING(0x0F, true);
 
 		public final int code;
@@ -221,8 +222,21 @@ public abstract class Document
 
 	public abstract void accept(DocumentVisitor visitor);
 
-	public Document path(List<String> path)
+	@Override
+	public final int compareTo(Document o)
 	{
-		return path.size() == 0 ? this : null;
+		int diff = this.type.code - o.type.code;
+		if (diff != 0)
+			return diff;
+		return this.compareValue(o);
+	}
+
+	protected abstract int compareValue(Document other);
+
+	public abstract Document modify(Modifier m);
+
+	public Document get(DocumentPath path)
+	{
+		return path.length() == 0 ? this : null;
 	}
 }

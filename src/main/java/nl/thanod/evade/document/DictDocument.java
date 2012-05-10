@@ -5,6 +5,7 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
@@ -33,7 +34,7 @@ public class DictDocument extends Document
 	 */
 	public DictDocument(Map<String, Document> data, long clearedOn, boolean clone)
 	{
-		super(Document.newestVersion(data.values()), Type.DOCUMENT);
+		super(Document.newestVersion(data.values()), Type.DICT);
 		this.clearedOn = clearedOn;
 		if (clone) {
 			this.data = new TreeMap<String, Document>();
@@ -121,20 +122,71 @@ public class DictDocument extends Document
 	}
 
 	@Override
-	public Document path(List<String> path)
+	public Document get(DocumentPath path)
 	{
 		Document d = this.get(path.get(0));
 		if (d == null)
 			return null;
-		return d.path(path.subList(1, path.size()));
+		return d.get(path.next());
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor.DocumentVisitor)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor
+	 * .DocumentVisitor)
 	 */
 	@Override
 	public void accept(DocumentVisitor visitor)
 	{
 		visitor.visit(this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
+	 * .Document)
+	 */
+	@Override
+	protected int compareValue(Document other)
+	{
+		DictDocument dother = (DictDocument) other;
+		Iterator<Map.Entry<String, Document>> tit = this.data.entrySet().iterator();
+		Iterator<Map.Entry<String, Document>> oit = dother.data.entrySet().iterator();
+
+		int diff;
+
+		while (tit.hasNext() && oit.hasNext()) {
+			Map.Entry<String, Document> te = tit.next();
+			Map.Entry<String, Document> oe = oit.next();
+
+			diff = te.getKey().compareTo(oe.getKey());
+			if (diff != 0)
+				return diff;
+			diff = te.getValue().compareTo(oe.getValue());
+			if (diff != 0)
+				return diff;
+		}
+		if (tit.hasNext())
+			return 1;
+		if (oit.hasNext())
+			return -1;
+		return 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
+	 * .Modifier)
+	 */
+	@Override
+	public Document modify(Modifier m)
+	{
+		Map<String, Document> data = new TreeMap<String, Document>();
+		for (Map.Entry<String, Document> e : this.data.entrySet())
+			data.put(e.getKey(), e.getValue().modify(m));
+		return new DictDocument(data, this.clearedOn, false);
 	}
 }

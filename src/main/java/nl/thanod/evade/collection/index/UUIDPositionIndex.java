@@ -3,8 +3,11 @@
  */
 package nl.thanod.evade.collection.index;
 
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
+import java.util.NoSuchElementException;
 import java.util.UUID;
+
+import nl.thanod.evade.util.Generator;
 
 /**
  * @author nilsdijk
@@ -33,9 +36,9 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 	}
 
 	public static final int INDEXSIZE = 16 + 4;
-	private final MappedByteBuffer buffer;
+	private final ByteBuffer buffer;
 
-	public UUIDPositionIndex(MappedByteBuffer buffer)
+	public UUIDPositionIndex(ByteBuffer buffer)
 	{
 		this.buffer = buffer;
 		//		this.validate();
@@ -81,5 +84,19 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 				throw new IllegalStateException("not ordered at index " + i);
 			p = p2;
 		}
+	}
+
+	public Iterable<UUID> uuids()
+	{
+		return new Generator<UUID>() {
+			int index = 0;
+			@Override
+			protected UUID generate() throws NoSuchElementException
+			{
+				if (index >= count())
+					throw new NoSuchElementException();
+				return get(index++).id;
+			}
+		};
 	}
 }

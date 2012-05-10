@@ -12,6 +12,8 @@ import nl.thanod.evade.document.Document;
  */
 public abstract class Collection implements Iterable<Document.Entry>
 {
+	public abstract Iterable<UUID> uuids();
+	
 	public abstract boolean contains(UUID id);
 
 	public abstract Document get(UUID id);

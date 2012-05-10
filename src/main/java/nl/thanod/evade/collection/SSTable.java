@@ -5,9 +5,6 @@ package nl.thanod.evade.collection;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 
 import nl.thanod.evade.collection.index.UUIDPositionIndex;
@@ -15,8 +12,11 @@ import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.store.Header;
+import nl.thanod.evade.store.bloom.Bloom;
+import nl.thanod.evade.store.bloom.BloomFilter;
+import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.ByteBufferDataInput;
-import nl.thanod.evade.util.CountingOutputStream;
 import nl.thanod.evade.util.Generator;
 
 /**
@@ -32,7 +32,8 @@ public class SSTable extends Collection
 	public final File file;
 
 	protected final UUIDPositionIndex index;
-	private final MappedByteBuffer datamap;
+	private final ByteBuffer datamap;
+	private final BloomFilter bloom;
 
 	private final UUID min;
 	private final UUID max;
@@ -41,22 +42,24 @@ public class SSTable extends Collection
 	{
 		this.file = file;
 
-		FileInputStream fin = new FileInputStream(file);
-		FileChannel ch = fin.getChannel();
-		ch.position(ch.size() - 4);
-
-		DataInputStream din = new DataInputStream(fin);
-		int indexstart = din.readInt();
+		RandomAccessFile raf = new RandomAccessFile(file, "r");
+		Header header = Header.read(raf);
 
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
-		index = new UUIDPositionIndex(ch.map(MapMode.READ_ONLY, indexstart, ch.size() - indexstart - 4));
+		this.index = new UUIDPositionIndex(header.map(raf, Header.Type.UUID_INDEX));
 
 		this.min = this.index.get(0).id;
 		this.max = this.index.get(this.index.count() - 1).id;
 
 		// the beginning of the file to the start of the index is the datapart of the file
-		datamap = ch.map(MapMode.READ_ONLY, 0, indexstart);
+		this.datamap = header.map(raf, Header.Type.DATA);
+		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
+	}
+
+	public boolean earlySkip(Bloom<?> bloom)
+	{
+		return !(this.bloom != null && bloom.containedBy(this.bloom));
 	}
 
 	/*
@@ -132,34 +135,57 @@ public class SSTable extends Collection
 
 			Map<UUID, Integer> index = new TreeMap<UUID, Integer>();
 
-			FileOutputStream fos = new FileOutputStream(f);
-			CountingOutputStream cos = new CountingOutputStream(fos);
-			DataOutputStream dos = new DataOutputStream(cos);
+			RandomAccessFile raf = new RandomAccessFile(f, "rw");
+
+			ByteArrayOutputStream bos = new ByteArrayOutputStream(4 * 1024);
+			DataOutputStream dos = new DataOutputStream(bos);
 			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(dos);
 
+			Header.reserve(raf, 4);
+
+			Header header = new Header();
+
+			long offset = raf.getFilePointer();
+			header.put(Header.Type.DATA, offset);
+
 			// write the datablob
-			while (it.hasNext() && cos.getCount() < maxdatasize) {
+			while (it.hasNext() && raf.getFilePointer() < maxdatasize) {
 				Document.Entry e = it.next();
-				index.put(e.id, cos.getCount());
+				index.put(e.id, (int) (raf.getFilePointer() - offset));
 
 				// serialize document
 				e.doc.accept(dsv);
+				raf.write(bos.toByteArray());
+				bos.reset();
 			}
 
-			int indexstart = cos.getCount();
+			header.put(Header.Type.UUID_INDEX, raf.getFilePointer());
+
+			BloomFilter bloom = BloomFilter.optimal(index.size(), 5);
 
 			// write the index
 			for (Map.Entry<UUID, Integer> e : index.entrySet()) {
+				if (bloom != null)
+					new Bloom<UUID>(e.getKey(), BloomHasher.UUID).putIn(bloom);
+
 				dos.writeLong(e.getKey().getMostSignificantBits());
 				dos.writeLong(e.getKey().getLeastSignificantBits());
 				dos.writeInt(e.getValue());
 			}
+			raf.write(bos.toByteArray());
+			bos.reset();
+
+			header.put(Header.Type.BLOOM, raf.getFilePointer());
+			if (bloom != null)
+				bloom.write(raf);
+			header.put(Header.Type.EOF, raf.getFilePointer());
 
 			// the offset where the index starts
-			dos.writeInt(indexstart);
+			raf.seek(0);
+			header.write(raf);
 
 			// close the file
-			dos.close();
+			raf.close();
 			files.add(f);
 		}
 		return files;
@@ -173,5 +199,15 @@ public class SSTable extends Collection
 	public int size()
 	{
 		return this.index.count();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		return this.index.uuids();
 	}
 }

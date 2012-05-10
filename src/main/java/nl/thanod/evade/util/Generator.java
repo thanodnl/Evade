@@ -9,11 +9,21 @@ import java.util.NoSuchElementException;
 /**
  * @author nilsdijk
  */
-public abstract class Generator<E> implements Iterator<E>
+public abstract class Generator<E> implements Iterator<E>, Iterable<E>
 {
 
 	private boolean next = false;
 	private E value;
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Iterable#iterator()
+	 */
+	@Override
+	public Iterator<E> iterator()
+	{
+		return this;
+	}
 
 	/*
 	 * (non-Javadoc)

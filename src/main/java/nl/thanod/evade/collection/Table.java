@@ -5,13 +5,18 @@ package nl.thanod.evade.collection;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.store.bloom.Bloom;
+import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
 
 /**
@@ -23,9 +28,15 @@ public class Table extends Collection
 	protected List<SSTable> sstables;
 	protected volatile Memtable memtable;
 
-	public Table()
+	private final File directory;
+	private final String name;
+
+	private Table(File directory, String name)
 	{
-		sstables = new LinkedList<SSTable>();
+		this.directory = directory;
+		this.name = name;
+
+		this.sstables = new LinkedList<SSTable>();
 	}
 
 	private void addSSTable(SSTable ss)
@@ -55,6 +66,36 @@ public class Table extends Collection
 	public void update(UUID id, Document doc)
 	{
 		getMemtable().update(id, doc);
+		if (getMemtable().size() >= 50000) { // persist the table
+			persist();
+		}
+	}
+
+	/**
+	 * @param old
+	 */
+	private void compact(Memtable old)
+	{
+		try {
+			// save the tables
+			for (File sstable : SSTable.save(old)) {
+				// and add all created tables for resolving
+				this.addSSTable(new SSTable(sstable));
+				System.out.println(sstable);
+			}
+		} catch (FileNotFoundException ball) {
+			ball.printStackTrace();
+		} catch (IOException ball) {
+			ball.printStackTrace();
+		}
+	}
+
+	public void persist()
+	{
+		Memtable old = getMemtable();
+		// put a new memtable in place for further writes
+		this.memtable = new Memtable();
+		compact(old);
 	}
 
 	/*
@@ -74,8 +115,9 @@ public class Table extends Collection
 	@Override
 	public boolean contains(UUID id)
 	{
+		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		for (SSTable ss : this.sstables)
-			if (ss.contains(id))
+			if (!ss.earlySkip(bloom) && ss.contains(id))
 				return true;
 		return getMemtable().contains(id);
 	}
@@ -87,11 +129,14 @@ public class Table extends Collection
 	@Override
 	public Document get(UUID id)
 	{
+		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		Document doc = null;
-		for (SSTable ss : this.sstables)
+		for (SSTable ss : this.sstables) {
+			if (ss.earlySkip(bloom))
+				continue;
 			doc = Document.merge(doc, ss.get(id));
+		}
 		doc = Document.merge(doc, getMemtable().get(id));
-
 		return doc;
 	}
 
@@ -109,41 +154,20 @@ public class Table extends Collection
 		return count;
 	}
 
-	private static class LinkedEntry<T>
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
 	{
-		public final LinkedEntry<T> next;
-		public final T t;
-
-		public LinkedEntry(LinkedEntry<T> next, T t)
-		{
-			this.next = next;
-			this.t = t;
-		}
-	}
-
-	public void ensureStringIndex(List<String> path)
-	{
-		long time = System.nanoTime();
-		Map<String, LinkedEntry<UUID>> index = new TreeMap<String, LinkedEntry<UUID>>();
-		for (Document.Entry e : this) {
-			Document d = e.doc.path(path);
-			if (d == null)
-				continue;
-			if (d instanceof StringDocument) {
-				String value = ((StringDocument) d).value;
-				value = value.toLowerCase();
-				index.put(value, new LinkedEntry<UUID>(index.get(value), e.id));
-			}
-		}
-		time = System.nanoTime() - time;
-		
-		System.out.println("sorting the index took: " + time + "ns (" + (time/1000000) + "ms)");
-		System.out.println(index.size());
+		// not yet implemented
+		throw new UnsupportedOperationException();
 	}
 
 	public static Table load(final File dir, final String name)
 	{
-		Table t = new Table();
+		Table t = new Table(dir, name);
 		File[] files = dir.listFiles(new FileFilter() {
 			final Pattern p = Pattern.compile(name + "\\d+\\.sstable");
 

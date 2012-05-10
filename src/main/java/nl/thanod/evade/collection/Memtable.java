@@ -52,7 +52,7 @@ public class Memtable extends Collection
 		}
 	}
 
-	public void update(UUID id, Document doc)
+	public Memtable update(UUID id, Document doc)
 	{
 		this.rwl.writeLock().lock();
 		try {
@@ -62,6 +62,7 @@ public class Memtable extends Collection
 		} finally {
 			this.rwl.writeLock().unlock();
 		}
+		return this;
 	}
 
 	/*
@@ -102,5 +103,14 @@ public class Memtable extends Collection
 	public int size()
 	{
 		return this.docs.size();
+	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		return Collections.unmodifiableSet(this.docs.keySet());
 	}
 }

@@ -81,7 +81,7 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 	{
 		try {
 			// general document information
-			this.out.write(Document.Type.DOCUMENT.code);
+			this.out.write(Document.Type.DICT.code);
 
 			for (Map.Entry<String, Document> e : doc.entrySet()) {
 				this.out.write(0xFF); // entry following
@@ -103,18 +103,57 @@ public class DocumentSerializerVisitor implements DocumentVisitor
 	public static Document deserialize(DataInput stream)
 	{
 		try {
-			int code = stream.readByte();
+			int code = stream.readByte() & 0xFF;
 			Document.Type type = Document.Type.getByCode(code);
 			switch (type) {
 				case NULL:
 					return new NullDocument(stream.readLong());
 				case STRING:
 					return new StringDocument(stream.readLong(), stream.readUTF());
-				case DOCUMENT:
+				case DICT:
 					Map<String, Document> map = new TreeMap<String, Document>();
 					while (stream.readByte() != 0)
 						map.put(stream.readUTF(), deserialize(stream));
 					return new DictDocument(map, stream.readLong(), false);
+				default:
+					throw new ProtocolException("unknown type: " + type + " (#" + code + ")");
+			}
+		} catch (IOException ball) {
+			throw new RuntimeException(ball);
+		}
+	}
+
+	/**
+	 * Move a document from one source to another without fully deserializing
+	 * @param in
+	 * @param out
+	 */
+	public static void move(DataInput in, DataOutput out)
+	{
+		int temp;
+		try {
+			int code = in.readByte() & 0xFF;
+			Document.Type type = Document.Type.getByCode(code);
+			switch (type) {
+				case NULL:
+					out.writeByte(code);
+					out.writeLong(in.readLong());
+					break;
+				case STRING:
+					out.writeByte(code);
+					out.writeLong(in.readLong());
+					out.writeUTF(in.readUTF());
+					break;
+				case DICT:
+					out.writeByte(code);
+					while ((temp = in.readByte()) != 0) {
+						out.writeByte(temp);
+						out.writeUTF(in.readUTF());
+						move(in, out);
+					}
+					out.writeByte(temp);
+					out.writeLong(in.readLong());
+					break;
 				default:
 					throw new ProtocolException("unknown type: " + type + " (#" + code + ")");
 			}
