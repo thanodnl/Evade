@@ -52,4 +52,52 @@ public final class Search
 			t = scope.get(min);
 		return t;
 	}
+
+	public static <T> T before(Searchable<T> scope, Comparable<? super T> compare)
+	{
+		int size = scope.count();
+		if (size == 0)
+			return null;
+
+		int bit = 1 << (31 - Integer.numberOfLeadingZeros(size));
+		int found = 0;
+
+		while (bit != 0) {
+			int index = found | bit;
+			if (index < size) {
+				T t = scope.get(index);
+				if (compare.compareTo(t) > 0)
+					found = index;
+			}
+			bit >>= 1;
+		}
+		T t = scope.get(found);
+		if (compare.compareTo(t) > 0)
+			t = scope.get(found + 1);
+		return t;
+	}
+	
+	public static <T> T after(Searchable<T> scope, Comparable<? super T> compare)
+	{
+		int size = scope.count();
+		if (size == 0)
+			return null;
+
+		int bit = 1 << (31 - Integer.numberOfLeadingZeros(size));
+		int found = 0;
+
+		while (bit != 0) {
+			int index = found | bit;
+			if (index < size) {
+				T t = scope.get(index);
+				if (compare.compareTo(t) >= 0)
+					found = index;
+			}
+			bit >>= 1;
+		}
+		T t = scope.get(found);
+		if (compare.compareTo(t) < 0)
+			t = scope.get(found - 1);
+		return t;
+	}
 }

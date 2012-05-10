@@ -3,10 +3,7 @@
  */
 package nl.thanod.evade.collection;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -139,7 +136,10 @@ public class SSTable extends Collection
 			Map<UUID, Integer> index = new TreeMap<UUID, Integer>();
 
 			RandomAccessFile raf = new RandomAccessFile(f, "rw");
-			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(raf);
+
+			ByteArrayOutputStream bos = new ByteArrayOutputStream(4 * 1024);
+			DataOutputStream dos = new DataOutputStream(bos);
+			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(dos);
 
 			Header.reserve(raf, 4);
 
@@ -155,6 +155,8 @@ public class SSTable extends Collection
 
 				// serialize document
 				e.doc.accept(dsv);
+				raf.write(bos.toByteArray());
+				bos.reset();
 			}
 
 			header.put(Header.Type.UUID_INDEX, raf.getFilePointer());
@@ -166,10 +168,12 @@ public class SSTable extends Collection
 				if (bloom != null)
 					new Bloom<UUID>(e.getKey(), BloomHasher.UUID).putIn(bloom);
 
-				raf.writeLong(e.getKey().getMostSignificantBits());
-				raf.writeLong(e.getKey().getLeastSignificantBits());
-				raf.writeInt(e.getValue());
+				dos.writeLong(e.getKey().getMostSignificantBits());
+				dos.writeLong(e.getKey().getLeastSignificantBits());
+				dos.writeInt(e.getValue());
 			}
+			raf.write(bos.toByteArray());
+			bos.reset();
 
 			header.put(Header.Type.BLOOM, raf.getFilePointer());
 			if (bloom != null)

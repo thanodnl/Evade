@@ -27,7 +27,7 @@ public class StringDocument extends Document
 	@Override
 	public String toString()
 	{
-		return super.toString() + this.value;
+		return super.toString() + '"' + this.value + '"';
 	}
 
 	@Override

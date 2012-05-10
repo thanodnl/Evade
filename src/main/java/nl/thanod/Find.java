@@ -25,14 +25,27 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
+
 		File data = new File("data");
 
 		Table t = Table.load(data, "out");
 		SSIndex index = new SSIndex(new File(data, "out0.idx"));
+		find(t, index, "thanod");
+	}
 
-		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
+	/**
+	 * @param t
+	 * @param index
+	 * @param name
+	 */
+	private static void find(Table t, SSIndex index, final String name)
+	{
+		System.out.println("looking for " + name);
+
+		Constraint c = new StartsWithConstraint(new LowerCase(), name);
 		List<String> path = new ArrayList<String>();
-		path.add("name");
+		path.add("actor_attributes");
+		path.add("login");
 
 		Comparable<Entry> search = new Comparable<Entry>() {
 
@@ -45,35 +58,31 @@ public class Find
 					return diff;
 
 				StringDocument sd = (StringDocument) o.match;
-				String s = "zh1";
+				String s = name;
 				return s.compareTo(sd.value);
 			}
 		};
 
-		for (int i = 0; i < 100; i++) {
-			int found = 0;
-			long took = System.nanoTime();
-			Entry e = Search.binsearch(index, search);
+		List<Document.Entry> result = new ArrayList<Document.Entry>(100);
+		long took = System.nanoTime();
+		Entry e = Search.before(index, search);
+		System.out.println(e);
 
-			// is going wrong when there are multiple entries on the same index
-			if (!e.match.test(c))
-				e = e.next();
+		while (e != null && e.match.test(c)) {
 			Document doc = t.get(e.id);
-			while (e.match.test(c)) {
-				if (doc != null) {
-					Document q = doc.path(path);
+			if (doc != null) {
+				Document q = doc.path(path);
+				if (q != null) {
 					if (q.test(c)) {
-						found++;
 						Document.Entry de = new Document.Entry(e.id, doc);
-						//System.out.println(de);
+						result.add(de);
 					}
 				}
-				e = e.next();
-				doc = t.get(e.id);
 			}
-
-			took = System.nanoTime() - took;
-			System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + found);
+			e = e.next();
 		}
+
+		took = System.nanoTime() - took;
+		System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + result.size());
 	}
 }
