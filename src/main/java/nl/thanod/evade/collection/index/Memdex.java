@@ -16,6 +16,7 @@ import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.query.Constraint;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
@@ -35,6 +36,7 @@ public class Memdex
 		System.out.println(temp);
 
 		RandomAccessFile tempraf = new RandomAccessFile(temp, "rw");
+		temp.deleteOnExit(); // be sure to remove the file when the jvm quits
 
 		// write the temporary index to temp
 		// and get an offset of entries from it
@@ -131,14 +133,12 @@ public class Memdex
 		} catch (Exception ball) {
 			// file could not be removed
 			ball.printStackTrace(); // TODO make better debugging for this
-			temp.deleteOnExit(); // be sure to remove the file when the jvm quits
 		}
 	}
 
 	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, DocumentPath path, Modifier modifier) throws IOException
 	{
 		List<Long> offsets = new ArrayList<Long>();
-		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(temp);
 		for (Document.Entry e : data) {
 			Document doc = e.doc.get(path);
 			if (doc == null)
@@ -158,7 +158,7 @@ public class Memdex
 			temp.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
-			doc.accept(dsv);
+			doc.accept(ParamDocumentSerializerVisitor.VISITOR, temp);
 		}
 		return offsets;
 	}

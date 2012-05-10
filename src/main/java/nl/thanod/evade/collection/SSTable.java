@@ -12,6 +12,7 @@ import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomFilter;
@@ -26,7 +27,7 @@ public class SSTable extends Collection
 {
 
 	private static final File DATA_DIR = new File("data");
-	private static final int DEF_DATA_SIZE = 64 * 1024 * 1024;
+	private static final int DEF_DATA_SIZE = 256 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	public final File file;
@@ -139,7 +140,6 @@ public class SSTable extends Collection
 
 			ByteArrayOutputStream bos = new ByteArrayOutputStream(4 * 1024);
 			DataOutputStream dos = new DataOutputStream(bos);
-			DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(dos);
 
 			Header.reserve(raf, 4);
 
@@ -154,7 +154,7 @@ public class SSTable extends Collection
 				index.put(e.id, (int) (raf.getFilePointer() - offset));
 
 				// serialize document
-				e.doc.accept(dsv);
+				e.doc.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
 				raf.write(bos.toByteArray());
 				bos.reset();
 			}
