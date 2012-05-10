@@ -6,6 +6,7 @@ package nl.thanod.evade.document;
 import java.util.Map;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * @author nilsdijk
@@ -41,18 +42,6 @@ public class DocumentBuilder
 		return this;
 	}
 
-	public DocumentBuilder put(String name, String value)
-	{
-		this.data.peek().put(name, new StringDocument(this.version, value));
-		return this;
-	}
-
-	public DocumentBuilder putNull(String name)
-	{
-		this.data.peek().put(name, new NullDocument(this.version));
-		return this;
-	}
-
 	public DictDocument make()
 	{
 		if (this.data.size() <= 0)
@@ -69,31 +58,88 @@ public class DocumentBuilder
 
 	/**
 	 * @param name
-	 * @param i
 	 * @return
 	 */
-	public DocumentBuilder put(String name, int number)
+	public DocumentBuilder putNull(String name)
 	{
-		return this.put(name, String.valueOf(number));
+		this.data.peek().put(name, new NullDocument(this.version));
+		return this;
 	}
 
 	/**
 	 * @param name
-	 * @param i
+	 * @param value
 	 * @return
 	 */
-	public DocumentBuilder put(String name, long number)
+	public DocumentBuilder put(String name, String value)
 	{
-		return this.put(name, String.valueOf(number));
+		this.data.peek().put(name, new StringDocument(this.version, value));
+		return this;
 	}
 
 	/**
 	 * @param name
-	 * @param i
+	 * @param value
 	 * @return
 	 */
-	public DocumentBuilder put(String name, boolean bool)
+	public DocumentBuilder put(String name, int value)
 	{
-		return this.put(name, String.valueOf(bool));
+		this.data.peek().put(name, new IntegerDocument(this.version, value));
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public DocumentBuilder put(String name, long value)
+	{
+		this.data.peek().put(name, new LongDocument(this.version, value));
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public DocumentBuilder put(String name, boolean value)
+	{
+		this.data.peek().put(name, new BooleanDocument(this.version, value));
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public DocumentBuilder put(String name, double value)
+	{
+		this.data.peek().put(name, new DoubleDocument(this.version, value));
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public DocumentBuilder put(String name, float value)
+	{
+		this.data.peek().put(name, new FloatDocument(this.version, value));
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public DocumentBuilder put(String name, UUID value)
+	{
+		this.data.peek().put(name, new UUIDDocument(this.version, value));
+		return this;
 	}
 }

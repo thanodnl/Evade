@@ -3,9 +3,7 @@
  */
 package nl.thanod.evade.query;
 
-import nl.thanod.evade.document.DictDocument;
-import nl.thanod.evade.document.NullDocument;
-import nl.thanod.evade.document.StringDocument;
+import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
@@ -49,6 +47,42 @@ public abstract class AbstractConstraint implements Constraint
 
 	@Override
 	public boolean test(DictDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(BooleanDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(IntegerDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(LongDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(UUIDDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(DoubleDocument doc)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean test(FloatDocument doc)
 	{
 		return false;
 	}

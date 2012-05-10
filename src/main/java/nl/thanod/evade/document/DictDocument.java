@@ -36,7 +36,12 @@ public class DictDocument extends Document
 	{
 		super(Document.newestVersion(data.values()), Type.DICT);
 		this.clearedOn = clearedOn;
-		if (clone) {
+		if (data.size() == 0) {
+			this.data = Collections.emptyMap();
+		} else if (data.size() == 1) {
+			Map.Entry<String, Document> content = data.entrySet().iterator().next();
+			this.data = Collections.singletonMap(content.getKey(), content.getValue());
+		} else if (clone) {
 			this.data = new TreeMap<String, Document>();
 			for (Map.Entry<String, Document> e : data.entrySet())
 				this.data.put(e.getKey(), e.getValue());
@@ -182,7 +187,7 @@ public class DictDocument extends Document
 	 * .Modifier)
 	 */
 	@Override
-	public Document modify(Modifier m)
+	public DictDocument modify(Modifier m)
 	{
 		Map<String, Document> data = new TreeMap<String, Document>();
 		for (Map.Entry<String, Document> e : this.data.entrySet())

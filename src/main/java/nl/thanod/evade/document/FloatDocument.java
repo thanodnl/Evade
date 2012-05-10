@@ -10,35 +10,20 @@ import nl.thanod.evade.query.Constraint;
 /**
  * @author nilsdijk
  */
-public class StringDocument extends Document
+public class FloatDocument extends Document
 {
-	public final String value;
+
+	public final float value;
 
 	/**
 	 * @param version
 	 * @param type
 	 */
-	public StringDocument(long version, String value)
+	public FloatDocument(long version, float value)
 	{
-		super(version, Type.STRING);
+		super(version, Type.FLOAT);
+		// TODO Auto-generated constructor stub
 		this.value = value;
-	}
-
-	@Override
-	public String toString()
-	{
-		return super.toString() + '"' + this.value + '"';
-	}
-
-	@Override
-	public boolean equals(Object that)
-	{
-		if (!super.equals(that))
-			return false;
-		if (!(that instanceof StringDocument))
-			return false;
-		StringDocument thats = (StringDocument) that;
-		return this.value.equals(thats.value);
 	}
 
 	/*
@@ -55,7 +40,7 @@ public class StringDocument extends Document
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor
+	 * nl.thanod.evade.document.Document#accept(nl.thanod.evade.document.visitor
 	 * .DocumentVisitor)
 	 */
 	@Override
@@ -73,8 +58,8 @@ public class StringDocument extends Document
 	@Override
 	protected int compareValue(Document other)
 	{
-		StringDocument sd = (StringDocument) other;
-		return this.value.compareTo(sd.value);
+		FloatDocument that = (FloatDocument) this;
+		return Float.compare(this.value, that.value);
 	}
 
 	/*
@@ -84,10 +69,11 @@ public class StringDocument extends Document
 	 * .Modifier)
 	 */
 	@Override
-	public StringDocument modify(Modifier m)
+	public FloatDocument modify(Modifier m)
 	{
 		if (m == null)
 			return this;
-		return new StringDocument(this.version, m.modify(this.value));
+		return new FloatDocument(this.version, m.modify(this.value));
 	}
+
 }

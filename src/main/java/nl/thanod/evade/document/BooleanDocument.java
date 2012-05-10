@@ -10,35 +10,14 @@ import nl.thanod.evade.query.Constraint;
 /**
  * @author nilsdijk
  */
-public class StringDocument extends Document
+public class BooleanDocument extends Document
 {
-	public final String value;
+	public final boolean value;
 
-	/**
-	 * @param version
-	 * @param type
-	 */
-	public StringDocument(long version, String value)
+	public BooleanDocument(long version, boolean value)
 	{
-		super(version, Type.STRING);
+		super(version, Type.BOOLEAN);
 		this.value = value;
-	}
-
-	@Override
-	public String toString()
-	{
-		return super.toString() + '"' + this.value + '"';
-	}
-
-	@Override
-	public boolean equals(Object that)
-	{
-		if (!super.equals(that))
-			return false;
-		if (!(that instanceof StringDocument))
-			return false;
-		StringDocument thats = (StringDocument) that;
-		return this.value.equals(thats.value);
 	}
 
 	/*
@@ -55,7 +34,7 @@ public class StringDocument extends Document
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#visit(nl.thanod.evade.document.visitor
+	 * nl.thanod.evade.document.Document#accept(nl.thanod.evade.document.visitor
 	 * .DocumentVisitor)
 	 */
 	@Override
@@ -73,8 +52,8 @@ public class StringDocument extends Document
 	@Override
 	protected int compareValue(Document other)
 	{
-		StringDocument sd = (StringDocument) other;
-		return this.value.compareTo(sd.value);
+		BooleanDocument that = (BooleanDocument) other;
+		return Boolean.compare(this.value, that.value);
 	}
 
 	/*
@@ -84,10 +63,11 @@ public class StringDocument extends Document
 	 * .Modifier)
 	 */
 	@Override
-	public StringDocument modify(Modifier m)
+	public BooleanDocument modify(Modifier m)
 	{
 		if (m == null)
 			return this;
-		return new StringDocument(this.version, m.modify(this.value));
+		return new BooleanDocument(this.version, m.modify(this.value));
 	}
+
 }

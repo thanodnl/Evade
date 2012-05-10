@@ -44,7 +44,13 @@ public abstract class Document implements Comparable<Document>
 	{
 		NULL(0x00, true),
 		DICT(0x01, false),
-		STRING(0x0F, true);
+		STRING(0x0F, true),
+		BOOLEAN(0x10, true),
+		INTEGER(0x11, true),
+		LONG(0x12, true),
+		UUID(0x13, true),
+		DOUBLE(0x14, true),
+		FLOAT(0x15, true);
 
 		public final int code;
 		public final boolean valuetype;
