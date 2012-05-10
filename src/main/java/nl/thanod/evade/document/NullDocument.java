@@ -62,8 +62,11 @@ public class NullDocument extends Document
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers.Modifier)
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
+	 * .Modifier)
 	 */
 	@Override
 	public Document modify(Modifier m)

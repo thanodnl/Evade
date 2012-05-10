@@ -122,12 +122,12 @@ public class DictDocument extends Document
 	}
 
 	@Override
-	public Document path(List<String> path)
+	public Document get(DocumentPath path)
 	{
 		Document d = this.get(path.get(0));
 		if (d == null)
 			return null;
-		return d.path(path.subList(1, path.size()));
+		return d.get(path.next());
 	}
 
 	/*

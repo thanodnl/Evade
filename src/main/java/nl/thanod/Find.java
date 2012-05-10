@@ -13,6 +13,7 @@ import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.collection.index.SSIndex;
 import nl.thanod.evade.collection.index.Search;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.modifiers.LowerCase;
 import nl.thanod.evade.query.Constraint;
@@ -28,9 +29,10 @@ public class Find
 
 		File data = new File("data");
 
-		Table t = Table.load(data, "out");
-		SSIndex index = new SSIndex(new File(data, "out0.idx"));
-		find(t, index, "thanod");
+		Table t = Table.load(data, "github");
+		SSIndex index = new SSIndex(new File(data, "github0.idx"));
+
+		find(t, index, "thanodnl");
 	}
 
 	/**
@@ -43,9 +45,7 @@ public class Find
 		System.out.println("looking for " + name);
 
 		Constraint c = new StartsWithConstraint(new LowerCase(), name);
-		List<String> path = new ArrayList<String>();
-		path.add("actor_attributes");
-		path.add("login");
+		DocumentPath path = new DocumentPath("actor_attributes", "login");
 
 		Comparable<Entry> search = new Comparable<Entry>() {
 
@@ -66,12 +66,11 @@ public class Find
 		List<Document.Entry> result = new ArrayList<Document.Entry>(100);
 		long took = System.nanoTime();
 		Entry e = Search.before(index, search);
-		System.out.println(e);
 
 		while (e != null && e.match.test(c)) {
 			Document doc = t.get(e.id);
 			if (doc != null) {
-				Document q = doc.path(path);
+				Document q = doc.get(path);
 				if (q != null) {
 					if (q.test(c)) {
 						Document.Entry de = new Document.Entry(e.id, doc);

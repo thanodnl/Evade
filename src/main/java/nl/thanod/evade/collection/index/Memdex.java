@@ -12,6 +12,7 @@ import java.util.*;
 
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Type;
+import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
@@ -26,7 +27,7 @@ import nl.thanod.evade.util.ConvertedComparator;
 public class Memdex
 {
 
-	public static void persistSortedIndex(Iterable<Document.Entry> data, List<String> path, Constraint constraint) throws IOException
+	public static void persistSortedIndex(Iterable<Document.Entry> data, DocumentPath path, Constraint constraint) throws IOException
 	{
 		Modifier modifier = constraint.getModifier();
 
@@ -134,12 +135,12 @@ public class Memdex
 		}
 	}
 
-	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, List<String> path, Modifier modifier) throws IOException
+	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, DocumentPath path, Modifier modifier) throws IOException
 	{
 		List<Long> offsets = new ArrayList<Long>();
 		DocumentSerializerVisitor dsv = new DocumentSerializerVisitor(temp);
 		for (Document.Entry e : data) {
-			Document doc = e.doc.path(path);
+			Document doc = e.doc.get(path);
 			if (doc == null)
 				continue;
 

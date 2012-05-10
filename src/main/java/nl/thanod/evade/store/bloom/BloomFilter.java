@@ -6,9 +6,6 @@ package nl.thanod.evade.store.bloom;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.UUID;
-
-import nl.thanod.evade.util.hash.MurmurHash3;
 
 /**
  * @author nilsdijk

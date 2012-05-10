@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.store.bloom.Bloom;
-import nl.thanod.evade.store.bloom.BloomFilter;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
 

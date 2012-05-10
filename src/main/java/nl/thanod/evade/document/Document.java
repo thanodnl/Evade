@@ -232,11 +232,11 @@ public abstract class Document implements Comparable<Document>
 	}
 
 	protected abstract int compareValue(Document other);
-	
+
 	public abstract Document modify(Modifier m);
 
-	public Document path(List<String> path)
+	public Document get(DocumentPath path)
 	{
-		return path.size() == 0 ? this : null;
+		return path.length() == 0 ? this : null;
 	}
 }
