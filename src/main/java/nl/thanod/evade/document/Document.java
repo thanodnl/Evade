@@ -7,6 +7,7 @@ import java.util.*;
 
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
+import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 /**
@@ -227,6 +228,8 @@ public abstract class Document implements Comparable<Document>
 	public abstract boolean test(Constraint c);
 
 	public abstract void accept(DocumentVisitor visitor);
+
+	public abstract <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data);
 
 	@Override
 	public final int compareTo(Document o)

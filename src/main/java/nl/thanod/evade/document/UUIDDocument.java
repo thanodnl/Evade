@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
+import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
 import nl.thanod.evade.query.Constraint;
 
 /**
@@ -48,6 +49,18 @@ public class UUIDDocument extends Document
 	public void accept(DocumentVisitor visitor)
 	{
 		visitor.visit(this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.Document#accept(nl.thanod.evade.document.visitor
+	 * .ParameterizedDocumentVisitor, java.lang.Object)
+	 */
+	@Override
+	public <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data)
+	{
+		visitor.visit(this, data);
 	}
 
 	/*

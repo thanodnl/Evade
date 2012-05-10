@@ -17,7 +17,7 @@ import nl.thanod.evade.document.*;
 /**
  * @author nilsdijk
  */
-public class DocumentSerializerVisitor implements DocumentVisitor
+public class DocumentSerializerVisitor extends DocumentVisitor
 {
 
 	public static final Charset STRING_ENCODING = Charset.forName("UTF8");
