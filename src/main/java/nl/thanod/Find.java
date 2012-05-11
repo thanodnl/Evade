@@ -27,12 +27,15 @@ public class Find
 	public static void main(String... args) throws IOException
 	{
 
-		File data = new File("data");
+		File data = new File("data","github");
 
 		Table t = Table.load(data, "github");
 		SSIndex index = new SSIndex(new File(data, "github0.idx"));
+		
+		DocumentPath path = new DocumentPath("actor_attributes", "login");
+//		DocumentPath path = new DocumentPath("name");
 
-		find(t, index, "thanodnl");
+		find(t, index, "facebook", path);
 	}
 
 	/**
@@ -40,12 +43,11 @@ public class Find
 	 * @param index
 	 * @param name
 	 */
-	private static void find(Table t, SSIndex index, final String name)
+	private static void find(Table t, SSIndex index, final String name, DocumentPath path)
 	{
 		System.out.println("looking for " + name);
 
 		Constraint c = new StartsWithConstraint(new LowerCase(), name);
-		DocumentPath path = new DocumentPath("actor_attributes", "login");
 
 		Comparable<Entry> search = new Comparable<Entry>() {
 
@@ -63,18 +65,24 @@ public class Find
 			}
 		};
 
+		int count1 = 0;
+		int count2 = 0;
 		List<Document.Entry> result = new ArrayList<Document.Entry>(100);
 		long took = System.nanoTime();
 		Entry e = Search.before(index, search);
 
 		while (e != null && e.match.test(c)) {
+			count1++;
 			Document doc = t.get(e.id);
 			if (doc != null) {
 				Document q = doc.get(path);
 				if (q != null) {
 					if (q.test(c)) {
+						count2++;
+						if (count2 % 1000 == 0)
+							System.out.println(count2);
 						Document.Entry de = new Document.Entry(e.id, doc);
-						result.add(de);
+//						result.add(de);
 					}
 				}
 			}
@@ -82,6 +90,8 @@ public class Find
 		}
 
 		took = System.nanoTime() - took;
-		System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + result.size());
+		System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + count2);
+//		for (Document.Entry de:result)
+//			System.out.println(de);
 	}
 }
