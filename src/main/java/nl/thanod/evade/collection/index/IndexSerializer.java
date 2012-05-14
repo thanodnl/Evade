@@ -69,8 +69,8 @@ public class IndexSerializer
 				System.out.println(sindex.size() + ": " + e.match);
 
 			// write the uuid
-			raf.writeLong(e.id.getMostSignificantBits());
-			raf.writeLong(e.id.getLeastSignificantBits());
+			dos.writeLong(e.id.getMostSignificantBits());
+			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the document to cache for performace
 			e.match.accept(ParamDocumentSerializerVisitor.VISITOR, dos);

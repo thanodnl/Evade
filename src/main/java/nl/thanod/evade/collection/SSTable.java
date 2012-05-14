@@ -65,7 +65,9 @@ public class SSTable extends Collection implements Closeable
 
 	public boolean earlySkip(Bloom<?> bloom)
 	{
-		return !(this.bloom != null && bloom.containedBy(this.bloom));
+		if (this.bloom == null)
+			return false;
+		return !bloom.containedBy(this.bloom);
 	}
 
 	/*

@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.document.DocumentBuilder;
+import nl.thanod.evade.document.DocumentPath;
+import nl.thanod.evade.document.modifiers.LowerCase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +25,8 @@ public class Github
 	{
 		File data = new File("data","github");
 		Table table = Table.load(data, "github");
+		
+		table.maintainIndex(new DocumentPath("actor_attributes", "login"), new LowerCase());
 
 		File dir = new File(System.getProperty("user.home"), "githubdata");
 		File[] files = dir.listFiles(new FilenameFilter() {

@@ -22,11 +22,12 @@ public class SSTableScan
 	public static void main(String... args) throws IOException
 	{
 		long took;
-		File dataDir = new File("data", "github");
+		String name = "github";
+		File dataDir = new File("data", name);
 
 		int i = 0;
 		do {
-			File sstable = new File(dataDir, "github" + i++ + ".sstable");
+			File sstable = new File(dataDir, name + i++ + ".sstable");
 			System.out.println(sstable);
 			if (!sstable.exists())
 				break;

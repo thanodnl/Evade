@@ -21,7 +21,8 @@ public class Index
 	public static void main(String... args) throws IOException
 	{
 
-		Table t = Table.load(new File("data","github"), "github");
+		String name = "github";
+		Table t = Table.load(new File("data",name), name);
 
 		System.out.println(t.iterator().next());
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");

@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import nl.thanod.evade.collection.Memtable;
 import nl.thanod.evade.collection.index.IndexSerializer;
 import nl.thanod.evade.collection.index.SSIndex;
 
@@ -20,13 +19,14 @@ public class IndexCompacter
 {
 	public static void main(String... args) throws IOException
 	{
-		File dir = new File("data", "github_index");
+		final String name = "github";
+		File dir = new File("data", name);
 		File[] indexFiles = dir.listFiles(new FilenameFilter() {
 
 			@Override
-			public boolean accept(File dir, String name)
+			public boolean accept(File dir, String file)
 			{
-				return name.endsWith(".idx");
+				return file.startsWith(name) && file.endsWith(".idx");
 			}
 		});
 
@@ -35,6 +35,18 @@ public class IndexCompacter
 		for (File idxFile : indexFiles)
 			indices.add(new SSIndex(idxFile));
 
-		IndexSerializer.compactIndices(indices);
+		// merge all indices
+		IndexSerializer.compactIndices(dir, name, indices);
+		
+		// remove the old index files
+		for (File idxFile : indexFiles){
+			try {
+				idxFile.delete();
+				System.out.println("deleted: " + idxFile);
+			} catch(Exception ball){
+				ball.printStackTrace();
+				idxFile.deleteOnExit();
+			}	
+		}
 	}
 }
