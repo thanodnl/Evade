@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import nl.thanod.evade.collection.Table;
-import nl.thanod.evade.collection.index.Memdex;
+import nl.thanod.evade.collection.index.IndexSerializer;
 import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.modifiers.LowerCase;
 import nl.thanod.evade.query.Constraint;
@@ -26,6 +26,6 @@ public class Index
 		System.out.println(t.iterator().next());
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
 		DocumentPath path = new DocumentPath("actor_attributes","login");
-		Memdex.persistSortedIndex(t, path, c.getModifier());
+		IndexSerializer.persistSortedIndex(t, path, c.getModifier());
 	}
 }

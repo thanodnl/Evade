@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.thanod.evade.collection.Memtable;
-import nl.thanod.evade.collection.index.Memdex;
+import nl.thanod.evade.collection.index.IndexSerializer;
 import nl.thanod.evade.collection.index.SSIndex;
 
 /**
@@ -35,6 +35,6 @@ public class IndexCompacter
 		for (File idxFile : indexFiles)
 			indices.add(new SSIndex(idxFile));
 
-		Memdex.compactIndices(indices);
+		IndexSerializer.compactIndices(indices);
 	}
 }

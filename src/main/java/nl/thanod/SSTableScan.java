@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import nl.thanod.evade.collection.SSTable;
-import nl.thanod.evade.collection.index.Memdex;
+import nl.thanod.evade.collection.index.IndexSerializer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.modifiers.LowerCase;
@@ -34,7 +34,7 @@ public class SSTableScan
 
 			took = System.nanoTime();
 			DocumentPath path = new DocumentPath("actor_attributes", "login");
-			Memdex.persistSortedIndex(table, path, new LowerCase());
+			IndexSerializer.persistSortedIndex(table, path, new LowerCase());
 			took = System.nanoTime() - took;
 			System.out.println("It took " + took / 1000000f + "ms create the index");
 			

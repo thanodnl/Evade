@@ -8,26 +8,39 @@ import java.util.*;
 /**
  * @author nilsdijk
  */
-public class Sorterator<E> extends Generator<E>
+public class Sorterator<E> implements Iterator<E>
 {
 
-	public final List<Peekerator<E>> source;
+	public final ArrayList<Peekerator<E>> source;
 	public final Comparator<Peekerator<E>> comp;
 
 	public Sorterator(Iterable<? extends Iterable<E>> source, Comparator<E> comp)
 	{
 		this.source = new ArrayList<Peekerator<E>>();
-		for (Iterable<E> e : source)
-			this.source.add(new Peekerator<E>(e.iterator()));
+		for (Iterable<E> e : source) {
+			Iterator<E> it = e.iterator();
+			if (it.hasNext())
+				this.source.add(new Peekerator<E>(it));
+		}
 		this.comp = new Peekerator.Sorter<E>(comp);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see nl.thanod.evade.util.Generator#generate()
+	 * @see java.util.Iterator#hasNext()
 	 */
 	@Override
-	protected E generate() throws NoSuchElementException
+	public boolean hasNext()
+	{
+		return this.source.size() > 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Iterator#next()
+	 */
+	@Override
+	public E next()
 	{
 		if (this.source.size() <= 0)
 			throw new NoSuchElementException();
@@ -36,6 +49,16 @@ public class Sorterator<E> extends Generator<E>
 		if (!this.source.get(0).hasNext())
 			this.source.remove(0);
 		return e;
+
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.util.Iterator#remove()
+	 */
+	@Override
+	public void remove()
+	{
+		throw new UnsupportedOperationException();
+	}
 }

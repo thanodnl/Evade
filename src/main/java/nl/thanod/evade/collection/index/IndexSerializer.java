@@ -24,12 +24,12 @@ import nl.thanod.evade.util.iterator.Sorterator;
 /**
  * @author nilsdijk
  */
-public class Memdex
+public class IndexSerializer
 {
 
 	public static void compactIndices(Iterable<? extends Index> indices) throws IOException
 	{
-		Iterable<Index.Entry> index = new Sorterator<Index.Entry>(indices, new Comparator<Index.Entry>() {
+		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(indices, new Comparator<Index.Entry>() {
 			@Override
 			public int compare(Entry o1, Entry o2)
 			{
@@ -62,7 +62,8 @@ public class Memdex
 		DataOutput dos = new DataOutputStream(bos);
 
 		// write the data
-		for (Index.Entry e : index) {
+		while(index.hasNext()){
+			Index.Entry e = index.next();
 			sindex.add(raf.getFilePointer() - offset);
 			if (sindex.size() % 100000 == 0)
 				System.out.println(sindex.size() + ": " + e.match);
