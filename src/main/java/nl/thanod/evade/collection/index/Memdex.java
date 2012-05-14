@@ -3,13 +3,12 @@
  */
 package nl.thanod.evade.collection.index;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 
+import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Type;
 import nl.thanod.evade.document.DocumentPath;
@@ -17,10 +16,10 @@ import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
-import nl.thanod.evade.query.Constraint;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.ConvertedComparator;
+import nl.thanod.evade.util.Sorterator;
 
 /**
  * @author nilsdijk
@@ -28,9 +27,88 @@ import nl.thanod.evade.util.ConvertedComparator;
 public class Memdex
 {
 
-	public static void persistSortedIndex(Iterable<Document.Entry> data, DocumentPath path, Constraint constraint) throws IOException
+	public static void compactIndices(Iterable<? extends Index> indices) throws IOException
 	{
-		Modifier modifier = constraint.getModifier();
+		Iterable<Index.Entry> index = new Sorterator<Index.Entry>(indices, new Comparator<Index.Entry>() {
+			@Override
+			public int compare(Entry o1, Entry o2)
+			{
+				return o1.match.compareTo(o2.match);
+			}
+		});
+
+		// write the final index
+		File file;
+		int i = 0;
+		do {
+			file = new File("data", "out" + i++ + ".idx");
+		} while (file.exists());
+		RandomAccessFile raf = new RandomAccessFile(file, "rw");
+
+		Header indexHeader = new Header();
+
+		// reserve some room for the index table
+		Header.reserve(raf, 3);
+
+		// store the start of the data blob of the index
+		int offset = (int) raf.getFilePointer();
+		indexHeader.put(Header.Type.DATA, offset);
+
+		// list to store all offsets in the data blob for entries
+		List<Long> sindex = new ArrayList<Long>();
+
+		// optimize the writing of documents by serializing to these memory buffers
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutput dos = new DataOutputStream(bos);
+
+		// write the data
+		for (Index.Entry e : index) {
+			sindex.add(raf.getFilePointer() - offset);
+			if (sindex.size() % 100000 == 0)
+				System.out.println(sindex.size() + ": " + e.match);
+
+			// write the uuid
+			raf.writeLong(e.id.getMostSignificantBits());
+			raf.writeLong(e.id.getLeastSignificantBits());
+
+			// write the document to cache for performace
+			e.match.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
+
+			// write the cached document to file
+			raf.write(bos.toByteArray());
+			bos.reset();
+		}
+
+		// put the sorted index starting position in the header
+		indexHeader.put(Header.Type.SORTED_INDEX, (int) raf.getFilePointer());
+
+		// write the sorted index to file
+		for (Long pos : sindex) {
+			dos.writeInt(pos.intValue());
+
+			// if buffer is bigger than 10 megs flush it to file
+			if (bos.size() > 10 * 1024 * 1024) {
+				raf.write(bos.toByteArray());
+				bos.reset();
+			}
+		}
+		// write last part of the sorted index
+		if (bos.size() > 0)
+			raf.write(bos.toByteArray());
+		bos.reset();
+
+		indexHeader.put(Header.Type.EOF, (int) raf.getFilePointer());
+		raf.seek(0);
+
+		indexHeader.write(raf);
+
+		raf.close();
+	}
+
+	public static void persistSortedIndex(Iterable<Document.Entry> data, DocumentPath path, Modifier modifier) throws IOException
+	{
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutput dos = new DataOutputStream(bos);
 
 		File temp = File.createTempFile("eva_", ".idx");
 		System.out.println(temp);
@@ -61,7 +139,11 @@ public class Memdex
 		List<Long> sindex = new LinkedList<Long>();
 
 		// write the final index
-		File file = new File("data", "out0.idx");
+		File file;
+		int i = 0;
+		do {
+			file = new File("data", "out" + i++ + ".idx");
+		} while (file.exists());
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
 		Header indexHeader = new Header();
@@ -80,18 +162,31 @@ public class Memdex
 			sindex.add(raf.getFilePointer() - offset);
 
 			// copy the uuid
-			raf.writeLong(tmap.getLong());
-			raf.writeLong(tmap.getLong());
+			dos.writeLong(tmap.getLong());
+			dos.writeLong(tmap.getLong());
 
-			// copy the document
-			DocumentSerializerVisitor.move(tdi, raf);
+			// copy the document to cache
+			DocumentSerializerVisitor.move(tdi, dos);
+
+			// flush data from cache
+			raf.write(bos.toByteArray());
+			bos.reset();
 		}
 
 		// put the sorted index starting position in the header
 		indexHeader.put(Header.Type.SORTED_INDEX, (int) raf.getFilePointer());
+		
 		// write the sindex to file
-		for (Long pos : sindex)
-			raf.writeInt(pos.intValue());
+		for (Long pos : sindex) {
+			dos.writeInt(pos.intValue());
+			if (bos.size() > 10 * 1024 * 1024) {
+				raf.write(bos.toByteArray());
+				bos.reset();
+			}
+		}
+		if (bos.size() > 0)
+			raf.write(bos.toByteArray());
+		bos.reset();
 
 		// put the uuid index starting poisition in the header
 		indexHeader.put(Header.Type.UUID_INDEX, (int) raf.getFilePointer());
@@ -110,8 +205,16 @@ public class Memdex
 		});
 
 		// write the uuid's index
-		for (Long pos : sindex)
-			raf.writeInt(pos.intValue());
+		for (Long pos : sindex) {
+			dos.writeInt(pos.intValue());
+			if (bos.size() > 10 * 1024 * 1024) {
+				raf.write(bos.toByteArray());
+				bos.reset();
+			}
+		}
+		if (bos.size() > 0)
+			raf.write(bos.toByteArray());
+		bos.reset();
 
 		indexHeader.put(Header.Type.EOF, (int) raf.getFilePointer());
 
@@ -138,6 +241,8 @@ public class Memdex
 
 	private static List<Long> writeTempIndex(RandomAccessFile temp, Iterable<Document.Entry> data, DocumentPath path, Modifier modifier) throws IOException
 	{
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		DataOutput dos = new DataOutputStream(bos);
 		List<Long> offsets = new ArrayList<Long>();
 		for (Document.Entry e : data) {
 			Document doc = e.doc.get(path);
@@ -154,11 +259,13 @@ public class Memdex
 			offsets.add(temp.getFilePointer());
 
 			// write the address of the indexed object
-			temp.writeLong(e.id.getMostSignificantBits());
-			temp.writeLong(e.id.getLeastSignificantBits());
+			dos.writeLong(e.id.getMostSignificantBits());
+			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
-			doc.accept(ParamDocumentSerializerVisitor.VISITOR, temp);
+			doc.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
+			temp.write(bos.toByteArray());
+			bos.reset();
 		}
 		return offsets;
 	}

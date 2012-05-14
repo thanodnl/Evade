@@ -3,14 +3,18 @@
  */
 package nl.thanod.evade.collection.index;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.util.Generator;
 
 /**
  * @author nilsdijk
  */
-public interface Index
+public abstract class Index implements Iterable<Index.Entry>, Searchable<Index.Entry>
 {
 	public static abstract class Entry
 	{
@@ -32,6 +36,26 @@ public interface Index
 			return this.id + ": " + this.match;
 		}
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Iterable#iterator()
+	 */
+	@Override
+	public Iterator<Index.Entry> iterator()
+	{
+		return new Generator<Index.Entry>() {
+			Index.Entry cursor = get(0);
 
-	Iterable<Document.Entry> before(Document doc);
+			@Override
+			protected Entry generate() throws NoSuchElementException
+			{
+				if (this.cursor == null)
+					throw new NoSuchElementException();
+				Index.Entry ret = this.cursor;
+				this.cursor = this.cursor.next();
+				return ret;
+			}
+		};
+	}
 }

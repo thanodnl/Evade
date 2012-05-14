@@ -24,7 +24,7 @@ public class OffsetTable
 
 	public int offset(int index)
 	{
-		if (index >= count())
+		if (index >= count() || index < 0)
 			throw new IndexOutOfBoundsException();
 		return this.table.getInt(index * 4);
 	}

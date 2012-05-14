@@ -78,7 +78,7 @@ public class Table extends Collection
 	{
 		try {
 			// save the tables
-			for (File sstable : SSTable.save(old)) {
+			for (File sstable : SSTable.save(this.directory, this.name, old)) {
 				// and add all created tables for resolving
 				this.addSSTable(new SSTable(sstable));
 				System.out.println(sstable);

@@ -21,7 +21,7 @@ public class Github
 {
 	public static void main(String... args) throws IOException, JSONException
 	{
-		File data = new File("data");
+		File data = new File("data","github");
 		Table table = Table.load(data, "github");
 
 		File dir = new File(System.getProperty("user.home"), "githubdata");

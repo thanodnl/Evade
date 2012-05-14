@@ -23,15 +23,14 @@ import nl.thanod.evade.util.Generator;
 /**
  * @author nilsdijk
  */
-public class SSTable extends Collection
+public class SSTable extends Collection implements Closeable
 {
-
-	private static final File DATA_DIR = new File("data");
 	private static final int DEF_DATA_SIZE = 256 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	public final File file;
 
+	private final RandomAccessFile raf;
 	protected final UUIDPositionIndex index;
 	private final ByteBuffer datamap;
 	private final BloomFilter bloom;
@@ -43,7 +42,7 @@ public class SSTable extends Collection
 	{
 		this.file = file;
 
-		RandomAccessFile raf = new RandomAccessFile(file, "r");
+		this.raf = new RandomAccessFile(file, "r");
 		Header header = Header.read(raf);
 
 		// the index is located at start index until the end of the file minus the 4 bytes
@@ -56,6 +55,12 @@ public class SSTable extends Collection
 		// the beginning of the file to the start of the index is the datapart of the file
 		this.datamap = header.map(raf, Header.Type.DATA);
 		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
+	}
+
+	@Override
+	protected void finalize()
+	{
+		this.close();
 	}
 
 	public boolean earlySkip(Bloom<?> bloom)
@@ -100,6 +105,10 @@ public class SSTable extends Collection
 	@Override
 	public Iterator<Entry> iterator()
 	{
+		final ByteBuffer buffer = this.datamap.duplicate();
+		buffer.position(0);
+		final DataInput input = new ByteBufferDataInput(buffer);
+
 		return new Generator<Document.Entry>() {
 			int ordinal = 0;
 
@@ -110,17 +119,19 @@ public class SSTable extends Collection
 					throw new NoSuchElementException();
 				Pointer p = SSTable.this.index.get(ordinal);
 				++ordinal;
-				return new Entry(p.id, SSTable.this.get(p));
+				if (p.pos != buffer.position())
+					buffer.position(p.pos);
+				return new Entry(p.id, DocumentSerializerVisitor.deserialize(input));
 			}
 		};
 	}
 
-	public static List<File> save(Iterable<Document.Entry> data) throws FileNotFoundException, IOException
+	public static List<File> save(File directory, String name, Iterable<Document.Entry> data) throws FileNotFoundException, IOException
 	{
-		return SSTable.save(data, SSTable.DEF_DATA_SIZE); // save in blobs of 512 megabyte
+		return SSTable.save(directory, name, data, SSTable.DEF_DATA_SIZE); // save in blobs of 512 megabyte
 	}
 
-	public static List<File> save(Iterable<Document.Entry> data, int maxdatasize) throws FileNotFoundException, IOException
+	public static List<File> save(File datadir, String name, Iterable<Document.Entry> data, int maxdatasize) throws FileNotFoundException, IOException
 	{
 		// be sure that the max datasize is not exceeding the system setting
 		maxdatasize = Math.min(maxdatasize, MAX_DATA_SIZE);
@@ -131,7 +142,7 @@ public class SSTable extends Collection
 			int idx = 0;
 			File f;
 			do {
-				f = new File(DATA_DIR, "out" + idx++ + ".sstable");
+				f = new File(datadir, name + idx++ + ".sstable");
 			} while (f.exists());
 
 			Map<UUID, Integer> index = new TreeMap<UUID, Integer>();
@@ -209,5 +220,19 @@ public class SSTable extends Collection
 	public Iterable<UUID> uuids()
 	{
 		return this.index.uuids();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.io.Closeable#close()
+	 */
+	@Override
+	public void close()
+	{
+		try {
+			this.raf.close();
+		} catch (IOException ball) {
+			//TODO log exception for closing SSTable, not that you can do much about it but it would be nice to mesure the number of failures here
+		}
 	}
 }

@@ -10,8 +10,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import nl.thanod.evade.collection.index.Index.Entry;
-import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
@@ -20,7 +18,7 @@ import nl.thanod.evade.util.ByteBufferDataInput;
 /**
  * @author nilsdijk
  */
-public class SSIndex implements Searchable<Index.Entry>
+public class SSIndex extends Index
 {
 	private class SSIndexEntry extends Index.Entry
 	{
@@ -65,7 +63,7 @@ public class SSIndex implements Searchable<Index.Entry>
 
 		Header indexHeader = Header.read(raf);
 
-		datamap = indexHeader.map(raf,Header. Type.DATA);
+		datamap = indexHeader.map(raf, Header.Type.DATA);
 		sortedIndex = new OffsetTable(indexHeader.map(raf, Header.Type.SORTED_INDEX));
 		uuidIndex = new OffsetTable(indexHeader.map(raf, Header.Type.UUID_INDEX));
 	}
@@ -86,6 +84,7 @@ public class SSIndex implements Searchable<Index.Entry>
 			return new SSIndexEntry(index, id, match);
 		} catch (Exception ball) {
 			// something went terribly wrong
+			// mainly index out of bounds
 			return null;
 		}
 	}

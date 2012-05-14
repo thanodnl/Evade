@@ -30,12 +30,16 @@ public class Find
 		File data = new File("data","github");
 
 		Table t = Table.load(data, "github");
-		SSIndex index = new SSIndex(new File(data, "github0.idx"));
+		SSIndex index = new SSIndex(new File(data, "github1.idx"));
 		
 		DocumentPath path = new DocumentPath("actor_attributes", "login");
-//		DocumentPath path = new DocumentPath("name");
 
-		find(t, index, "facebook", path);
+		find(t, index, "koenbollen", path);
+		find(t, index, "floort", path);
+		find(t, index, "thanodnl", path);
+		find(t, index, "jderriks", path);
+		find(t, index, "jorisdormans", path);
+		find(t, index, "okoeroo", path);
 	}
 
 	/**

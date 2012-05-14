@@ -16,7 +16,9 @@ public class Compacter
 {
 	public static void main(String... args) throws IOException
 	{
-		Table t = Table.load(new File("data"), "out");
-		System.out.println(SSTable.save(t));
+		File dir = new File("data");
+		String name = "out";
+		Table t = Table.load(dir, name);
+		System.out.println(SSTable.save(dir, name, t));
 	}
 }
