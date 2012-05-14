@@ -27,7 +27,7 @@ import nl.thanod.evade.util.iterator.Sorterator;
 public class IndexSerializer
 {
 
-	public static void compactIndices(Iterable<? extends Index> indices) throws IOException
+	public static void compactIndices(File dir, String name, Iterable<? extends Index> indices) throws IOException
 	{
 		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(indices, new Comparator<Index.Entry>() {
 			@Override
@@ -41,7 +41,7 @@ public class IndexSerializer
 		File file;
 		int i = 0;
 		do {
-			file = new File("data", "out" + i++ + ".idx");
+			file = new File(dir, name + i++ + ".idx");
 		} while (file.exists());
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
@@ -79,6 +79,7 @@ public class IndexSerializer
 			raf.write(bos.toByteArray());
 			bos.reset();
 		}
+		System.out.println(sindex.size());
 
 		// put the sorted index starting position in the header
 		indexHeader.put(Header.Type.SORTED_INDEX, (int) raf.getFilePointer());

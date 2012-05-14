@@ -53,6 +53,30 @@ public final class Search
 		return t;
 	}
 
+	public static <T> int before(T[] scope, int offset, int length, Comparable<? super T> compare)
+	{
+		int size = length;
+		if (size == 0)
+			return 0;
+
+		int bit = 1 << (31 - Integer.numberOfLeadingZeros(size));
+		int found = 0;
+
+		while (bit != 0) {
+			int index = found | bit;
+			if (index < size) {
+				T t = scope[offset + index];
+				if (compare.compareTo(t) > 0)
+					found = index;
+			}
+			bit >>= 1;
+		}
+		T t = scope[offset + found];
+		if (compare.compareTo(t) > 0)
+			return offset + found + 1;
+		return offset + found;
+	}
+
 	public static <T> T before(Searchable<T> scope, Comparable<? super T> compare)
 	{
 		int size = scope.count();
@@ -76,7 +100,7 @@ public final class Search
 			t = scope.get(found + 1);
 		return t;
 	}
-	
+
 	public static <T> T after(Searchable<T> scope, Comparable<? super T> compare)
 	{
 		int size = scope.count();
