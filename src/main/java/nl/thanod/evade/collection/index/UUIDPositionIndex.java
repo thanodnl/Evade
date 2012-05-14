@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import nl.thanod.evade.util.Generator;
+import nl.thanod.evade.util.iterator.Generator;
 
 /**
  * @author nilsdijk

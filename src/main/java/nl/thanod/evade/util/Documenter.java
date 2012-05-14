@@ -7,6 +7,8 @@ import java.util.*;
 
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
+import nl.thanod.evade.util.iterator.Generator;
+import nl.thanod.evade.util.iterator.Peekerator;
 
 /**
  * @author nilsdijk

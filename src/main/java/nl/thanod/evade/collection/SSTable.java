@@ -18,7 +18,7 @@ import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomFilter;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.ByteBufferDataInput;
-import nl.thanod.evade.util.Generator;
+import nl.thanod.evade.util.iterator.Generator;
 
 /**
  * @author nilsdijk

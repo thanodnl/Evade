@@ -19,7 +19,7 @@ import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.ConvertedComparator;
-import nl.thanod.evade.util.Sorterator;
+import nl.thanod.evade.util.iterator.Sorterator;
 
 /**
  * @author nilsdijk

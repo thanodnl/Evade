@@ -9,7 +9,7 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.document.Document;
-import nl.thanod.evade.util.Generator;
+import nl.thanod.evade.util.iterator.Generator;
 
 /**
  * @author nilsdijk

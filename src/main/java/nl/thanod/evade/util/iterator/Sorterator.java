@@ -1,7 +1,7 @@
 /**
  * 
  */
-package nl.thanod.evade.util;
+package nl.thanod.evade.util.iterator;
 
 import java.util.*;
 
