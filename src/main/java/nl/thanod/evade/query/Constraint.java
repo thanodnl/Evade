@@ -5,7 +5,6 @@ package nl.thanod.evade.query;
 
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.modifiers.Modifier;
-import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
 
 /**

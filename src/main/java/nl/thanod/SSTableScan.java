@@ -8,11 +8,8 @@ import java.io.IOException;
 
 import nl.thanod.evade.collection.SSTable;
 import nl.thanod.evade.collection.index.IndexSerializer;
-import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.modifiers.LowerCase;
-import nl.thanod.evade.query.Constraint;
-import nl.thanod.evade.query.string.StartsWithConstraint;
 
 /**
  * @author nilsdijk
