@@ -6,7 +6,6 @@ package nl.thanod.evade.document;
 import java.util.*;
 
 import nl.thanod.evade.document.visitor.DocumentVisitor;
-import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
 
 /**
  * @author nilsdijk
@@ -223,9 +222,7 @@ public abstract class Document implements Comparable<Document>
 		return version;
 	}
 
-	public abstract void accept(DocumentVisitor visitor);
-
-	public abstract <OUT,IN> OUT accept(ParameterizedDocumentVisitor<OUT,IN> visitor, IN data);
+	public abstract <OUT,IN> OUT accept(DocumentVisitor<OUT,IN> visitor, IN data);
 
 	@Override
 	public final int compareTo(Document o)

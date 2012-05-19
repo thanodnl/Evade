@@ -17,16 +17,15 @@ import nl.thanod.evade.document.*;
 /**
  * @author nilsdijk
  */
-public class DocumentSerializerVisitor extends DocumentVisitor
+public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 {
 
 	public static final Charset STRING_ENCODING = Charset.forName("UTF8");
 
-	private final DataOutput out;
+	public static final DocumentSerializerVisitor VISITOR = new DocumentSerializerVisitor();
 
-	public DocumentSerializerVisitor(DataOutput out)
+	private DocumentSerializerVisitor()
 	{
-		this.out = out;
 	}
 
 	/*
@@ -36,18 +35,19 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.StringDocument)
 	 */
 	@Override
-	public void visit(StringDocument doc)
+	public Void visit(StringDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
 
 			// write the length of the string followed by the contents
-			this.out.writeUTF(doc.value);
+			out.writeUTF(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -57,15 +57,16 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.NullDocument)
 	 */
 	@Override
-	public void visit(NullDocument doc)
+	public Void visit(NullDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -75,27 +76,28 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.DictDocument)
 	 */
 	@Override
-	public void visit(DictDocument doc)
+	public Void visit(DictDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
+			out.write(doc.type.code);
 
 			for (Map.Entry<String, Document> e : doc.entrySet()) {
-				this.out.write(0xFF); // entry following
+				out.write(0xFF); // entry following
 
 				// write the key
-				this.out.writeUTF(e.getKey());
+				out.writeUTF(e.getKey());
 				// write the value
-				e.getValue().accept(this);
+				e.getValue().accept(this, out);
 			}
-			this.out.write(0x00); // no entry following anymore
+			out.write(0x00); // no entry following anymore
 
 			// the moment this dict was cleared
-			this.out.writeLong(doc.clearedOn);
+			out.writeLong(doc.clearedOn);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -105,16 +107,17 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.BooleanDocument)
 	 */
 	@Override
-	public void visit(BooleanDocument doc)
+	public Void visit(BooleanDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.write(doc.value ? 0xFF : 0x00);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.write(doc.value ? 0xFF : 0x00);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -124,16 +127,17 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.IntegerDocument)
 	 */
 	@Override
-	public void visit(IntegerDocument doc)
+	public Void visit(IntegerDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.writeInt(doc.value);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.writeInt(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -143,16 +147,17 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.LongDocument)
 	 */
 	@Override
-	public void visit(LongDocument doc)
+	public Void visit(LongDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.writeLong(doc.value);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.writeLong(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -162,17 +167,18 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.UUIDDocument)
 	 */
 	@Override
-	public void visit(UUIDDocument doc)
+	public Void visit(UUIDDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.writeLong(doc.value.getMostSignificantBits());
-			this.out.writeLong(doc.value.getLeastSignificantBits());
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.writeLong(doc.value.getMostSignificantBits());
+			out.writeLong(doc.value.getLeastSignificantBits());
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -182,16 +188,17 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.DoubleDocument)
 	 */
 	@Override
-	public void visit(DoubleDocument doc)
+	public Void visit(DoubleDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.writeDouble(doc.value);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.writeDouble(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -201,16 +208,17 @@ public class DocumentSerializerVisitor extends DocumentVisitor
 	 * .document.FloatDocument)
 	 */
 	@Override
-	public void visit(FloatDocument doc)
+	public Void visit(FloatDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
-			this.out.write(doc.type.code);
-			this.out.writeLong(doc.version);
-			this.out.writeFloat(doc.value);
+			out.write(doc.type.code);
+			out.writeLong(doc.version);
+			out.writeFloat(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	public static Document deserialize(DataInput stream)

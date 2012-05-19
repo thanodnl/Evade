@@ -15,7 +15,6 @@ import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
-import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.ConvertedComparator;
@@ -73,7 +72,7 @@ public class IndexSerializer
 			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the document to cache for performace
-			e.match.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
+			e.match.accept(DocumentSerializerVisitor.VISITOR, dos);
 
 			// write the cached document to file
 			raf.write(bos.toByteArray());
@@ -265,7 +264,7 @@ public class IndexSerializer
 			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
-			doc.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
+			doc.accept(DocumentSerializerVisitor.VISITOR, dos);
 			temp.write(bos.toByteArray());
 			bos.reset();
 		}

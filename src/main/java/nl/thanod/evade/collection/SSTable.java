@@ -12,7 +12,6 @@ import nl.thanod.evade.collection.index.UUIDPositionIndex.Pointer;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
-import nl.thanod.evade.document.visitor.ParamDocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomFilter;
@@ -170,7 +169,7 @@ public class SSTable extends Collection implements Closeable
 				index.put(e.id, (int) (raf.getFilePointer() - offset));
 
 				// serialize document
-				e.doc.accept(ParamDocumentSerializerVisitor.VISITOR, dos);
+				e.doc.accept(DocumentSerializerVisitor.VISITOR, dos);
 				raf.write(bos.toByteArray());
 				bos.reset();
 			}

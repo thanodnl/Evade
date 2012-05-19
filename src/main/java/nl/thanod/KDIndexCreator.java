@@ -31,8 +31,8 @@ public class KDIndexCreator
 		File ssname = new File("/Users/nilsdijk/Documents/workspace/Evade/data/names/names0.sstable");
 		SSTable ss = new SSTable(ssname);
 
-		IndexDescriptor idx1 = new IndexDescriptor(new DocumentPath("name"), LowerCase.INSTANCE);
-		IndexDescriptor idx2 = new IndexDescriptor(new DocumentPath("name"), LengthModifier.INSTANCE);
+		IndexDescriptor idx1 = new IndexDescriptor(new DocumentPath("name"), LowerCase.INSTANCE); // axis one will index the names in lower case
+		IndexDescriptor idx2 = new IndexDescriptor(new DocumentPath("name"), LengthModifier.INSTANCE); // axis two will index the length of the names
 
 		List<KDEntry> list = KDEntry.list(ss, idx1, idx2);
 

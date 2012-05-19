@@ -5,12 +5,12 @@ package nl.thanod.evade.query;
 
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.modifiers.Modifier;
-import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
+import nl.thanod.evade.document.visitor.DocumentVisitor;
 
 /**
  * @author nilsdijk
  */
-public class Constraint extends ParameterizedDocumentVisitor<Boolean, Void>
+public class Constraint extends DocumentVisitor<Boolean, Void>
 {
 
 	public final Modifier modifier;

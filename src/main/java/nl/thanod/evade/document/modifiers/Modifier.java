@@ -4,12 +4,12 @@
 package nl.thanod.evade.document.modifiers;
 
 import nl.thanod.evade.document.*;
-import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
+import nl.thanod.evade.document.visitor.DocumentVisitor;
 
 /**
  * @author nilsdijk
  */
-public abstract class Modifier extends ParameterizedDocumentVisitor<Document, Void>
+public abstract class Modifier extends DocumentVisitor<Document, Void>
 {
 
 	/*
