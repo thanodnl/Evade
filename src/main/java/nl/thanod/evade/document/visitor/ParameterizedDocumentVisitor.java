@@ -8,24 +8,24 @@ import nl.thanod.evade.document.*;
 /**
  * @author nilsdijk
  */
-public abstract class ParameterizedDocumentVisitor<User>
+public abstract class ParameterizedDocumentVisitor<OUT,IN>
 {
-	public abstract void visit(StringDocument doc, User data);
+	public abstract OUT visit(StringDocument doc, IN data);
 
-	public abstract void visit(NullDocument doc, User data);
+	public abstract OUT visit(NullDocument doc, IN data);
 
-	public abstract void visit(DictDocument doc, User data);
+	public abstract OUT visit(DictDocument doc, IN data);
 
-	public abstract void visit(BooleanDocument doc, User data);
+	public abstract OUT visit(BooleanDocument doc, IN data);
 
-	public abstract void visit(IntegerDocument doc, User data);
+	public abstract OUT visit(IntegerDocument doc, IN data);
 
-	public abstract void visit(LongDocument doc, User data);
+	public abstract OUT visit(LongDocument doc, IN data);
 
-	public abstract void visit(UUIDDocument doc, User data);
+	public abstract OUT visit(UUIDDocument doc, IN data);
 
-	public abstract void visit(DoubleDocument doc, User data);
+	public abstract OUT visit(DoubleDocument doc, IN data);
 
-	public abstract void visit(FloatDocument doc, User data);
+	public abstract OUT visit(FloatDocument doc, IN data);
 
 }

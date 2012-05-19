@@ -17,7 +17,7 @@ import nl.thanod.evade.document.*;
 /**
  * @author nilsdijk
  */
-public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor<DataOutput>
+public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor<Void, DataOutput>
 {
 
 	public static final Charset STRING_ENCODING = Charset.forName("UTF8");
@@ -35,7 +35,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.StringDocument)
 	 */
 	@Override
-	public void visit(StringDocument doc, DataOutput out)
+	public Void visit(StringDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -47,6 +47,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -56,7 +57,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.NullDocument)
 	 */
 	@Override
-	public void visit(NullDocument doc, DataOutput out)
+	public Void visit(NullDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -65,6 +66,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -74,7 +76,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.DictDocument)
 	 */
 	@Override
-	public void visit(DictDocument doc, DataOutput out)
+	public Void visit(DictDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -95,6 +97,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -104,7 +107,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.BooleanDocument)
 	 */
 	@Override
-	public void visit(BooleanDocument doc, DataOutput out)
+	public Void visit(BooleanDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -114,6 +117,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -123,7 +127,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.IntegerDocument)
 	 */
 	@Override
-	public void visit(IntegerDocument doc, DataOutput out)
+	public Void visit(IntegerDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -133,6 +137,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -142,7 +147,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.LongDocument)
 	 */
 	@Override
-	public void visit(LongDocument doc, DataOutput out)
+	public Void visit(LongDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -152,6 +157,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -161,7 +167,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.UUIDDocument)
 	 */
 	@Override
-	public void visit(UUIDDocument doc, DataOutput out)
+	public Void visit(UUIDDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -172,6 +178,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -181,7 +188,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.DoubleDocument)
 	 */
 	@Override
-	public void visit(DoubleDocument doc, DataOutput out)
+	public Void visit(DoubleDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -191,6 +198,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	/*
@@ -200,7 +208,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 	 * .document.FloatDocument)
 	 */
 	@Override
-	public void visit(FloatDocument doc, DataOutput out)
+	public Void visit(FloatDocument doc, DataOutput out)
 	{
 		try {
 			// general document information
@@ -210,6 +218,7 @@ public class ParamDocumentSerializerVisitor extends ParameterizedDocumentVisitor
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
+		return null;
 	}
 
 	public static Document deserialize(DataInput stream)

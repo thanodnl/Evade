@@ -3,10 +3,8 @@
  */
 package nl.thanod.evade.document;
 
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
-import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -20,17 +18,6 @@ public class IntegerDocument extends Document
 	{
 		super(version, Type.INTEGER);
 		this.value = value;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
-	 */
-	@Override
-	public boolean test(Constraint c)
-	{
-		return c.test(this);
 	}
 
 	/*
@@ -52,9 +39,9 @@ public class IntegerDocument extends Document
 	 * .ParameterizedDocumentVisitor, java.lang.Object)
 	 */
 	@Override
-	public <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data)
+	public <OUT,IN> OUT accept(ParameterizedDocumentVisitor<OUT,IN> visitor, IN data)
 	{
-		visitor.visit(this, data);
+		return visitor.visit(this, data);
 	}
 
 	/*
@@ -70,18 +57,10 @@ public class IntegerDocument extends Document
 		return Integer.compare(this.value, that.value);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
-	 * .Modifier)
-	 */
 	@Override
-	public IntegerDocument modify(Modifier m)
+	public String toString()
 	{
-		if (m == null)
-			return this;
-		return new IntegerDocument(this.version, m.modify(this.value));
+		return super.toString() + "(int)" + this.value;
 	}
 
 }

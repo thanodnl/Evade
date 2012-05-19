@@ -27,6 +27,6 @@ public class Index
 		System.out.println(t.iterator().next());
 		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
 		DocumentPath path = new DocumentPath("actor_attributes","login");
-		IndexSerializer.persistSortedIndex(t, path, c.getModifier());
+		IndexSerializer.persistSortedIndex(t, path, c.modifier);
 	}
 }

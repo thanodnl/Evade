@@ -4,6 +4,7 @@
  */
 package nl.thanod.evade.query.string;
 
+import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
@@ -17,15 +18,13 @@ public class StartsWithConstraint extends StringConstraint
 		super(m, s);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.query.string.StringConstraint#doTest(java.lang.String)
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.query.string.StringConstraint#visit(nl.thanod.evade.document.StringDocument, java.lang.Void)
 	 */
 	@Override
-	public boolean doTest(String s)
+	public Boolean visit(StringDocument doc, Void v)
 	{
-		return s.startsWith(this.s);
+		return doc.value.startsWith(this.s);
 	}
 
 }

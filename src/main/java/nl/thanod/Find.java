@@ -26,14 +26,16 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
+		String name = "github";
+		File data = new File("data", name);
 
-		File data = new File("data","github");
+		Table t = Table.load(data, name);
+		SSIndex index = new SSIndex(new File(data, "github144.idx"));
 
-		Table t = Table.load(data, "github");
-		SSIndex index = new SSIndex(new File(data, "github1.idx"));
-		
+		//		DocumentPath path = new DocumentPath("name");
+		//		find(t, index, "than", path);
+
 		DocumentPath path = new DocumentPath("actor_attributes", "login");
-
 		find(t, index, "koenbollen", path);
 		find(t, index, "floort", path);
 		find(t, index, "thanodnl", path);
@@ -75,18 +77,18 @@ public class Find
 		long took = System.nanoTime();
 		Entry e = Search.before(index, search);
 
-		while (e != null && e.match.test(c)) {
+		while (e != null && c.test(e.match)) {
 			count1++;
 			Document doc = t.get(e.id);
 			if (doc != null) {
 				Document q = doc.get(path);
 				if (q != null) {
-					if (q.test(c)) {
+					if (c.test(q)) {
 						count2++;
 						if (count2 % 1000 == 0)
 							System.out.println(count2);
 						Document.Entry de = new Document.Entry(e.id, doc);
-//						result.add(de);
+						result.add(de);
 					}
 				}
 			}
@@ -95,7 +97,7 @@ public class Find
 
 		took = System.nanoTime() - took;
 		System.out.println("took: " + took + "ns (" + took / 1000000 + "ms) to find " + count2);
-//		for (Document.Entry de:result)
+//		for (Document.Entry de : result)
 //			System.out.println(de);
 	}
 }

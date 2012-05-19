@@ -5,10 +5,8 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
-import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -225,11 +223,9 @@ public abstract class Document implements Comparable<Document>
 		return version;
 	}
 
-	public abstract boolean test(Constraint c);
-
 	public abstract void accept(DocumentVisitor visitor);
 
-	public abstract <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data);
+	public abstract <OUT,IN> OUT accept(ParameterizedDocumentVisitor<OUT,IN> visitor, IN data);
 
 	@Override
 	public final int compareTo(Document o)
@@ -241,8 +237,6 @@ public abstract class Document implements Comparable<Document>
 	}
 
 	protected abstract int compareValue(Document other);
-
-	public abstract Document modify(Modifier m);
 
 	public Document get(DocumentPath path)
 	{

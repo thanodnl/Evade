@@ -62,7 +62,7 @@ public class IndexSerializer
 		DataOutput dos = new DataOutputStream(bos);
 
 		// write the data
-		while(index.hasNext()){
+		while (index.hasNext()) {
 			Index.Entry e = index.next();
 			sindex.add(raf.getFilePointer() - offset);
 			if (sindex.size() % 100000 == 0)
@@ -177,7 +177,7 @@ public class IndexSerializer
 
 		// put the sorted index starting position in the header
 		indexHeader.put(Header.Type.SORTED_INDEX, (int) raf.getFilePointer());
-		
+
 		// write the sindex to file
 		for (Long pos : sindex) {
 			dos.writeInt(pos.intValue());
@@ -255,7 +255,7 @@ public class IndexSerializer
 			if (doc.type == Type.DICT)
 				doc = new NullDocument(doc.version);
 
-			doc = doc.modify(modifier);
+			doc = doc.accept(modifier, null);
 
 			// safe the index of the beginning of the entry
 			offsets.add(temp.getFilePointer());

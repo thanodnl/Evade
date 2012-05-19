@@ -3,26 +3,121 @@
  */
 package nl.thanod.evade.document.modifiers;
 
-import java.util.UUID;
+import nl.thanod.evade.document.*;
+import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
 
 /**
  * @author nilsdijk
  */
-public interface Modifier
+public abstract class Modifier extends ParameterizedDocumentVisitor<Document, Void>
 {
 
-	public abstract String modify(String doc);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.StringDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(StringDocument doc, Void data)
+	{
+		return doc;
+	}
 
-	public abstract int modify(int value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.NullDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(NullDocument doc, Void data)
+	{
+		return doc;
+	}
 
-	public abstract boolean modify(boolean value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.DictDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(DictDocument doc, Void data)
+	{
+		return doc;
+	}
 
-	public abstract long modify(long value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.BooleanDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(BooleanDocument doc, Void data)
+	{
+		// TODO Auto-generated method stub
+		return doc;
+	}
 
-	public abstract UUID modify(UUID value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.IntegerDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(IntegerDocument doc, Void data)
+	{
+		return doc;
+	}
 
-	public abstract double modify(double value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.LongDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(LongDocument doc, Void data)
+	{
+		return doc;
+	}
 
-	public abstract float modify(float value);
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.UUIDDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(UUIDDocument doc, Void data)
+	{
+		return doc;
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.DoubleDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(DoubleDocument doc, Void data)
+	{
+		return doc;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor#visit(nl
+	 * .thanod.evade.document.FloatDocument, java.lang.Object)
+	 */
+	@Override
+	public Document visit(FloatDocument doc, Void data)
+	{
+		return doc;
+	}
 }

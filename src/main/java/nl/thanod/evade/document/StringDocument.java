@@ -3,10 +3,8 @@
  */
 package nl.thanod.evade.document;
 
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
-import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -28,7 +26,7 @@ public class StringDocument extends Document
 	@Override
 	public String toString()
 	{
-		return super.toString() + '"' + this.value + '"';
+		return super.toString() + "(String)" + '"' + this.value + '"';
 	}
 
 	@Override
@@ -40,17 +38,6 @@ public class StringDocument extends Document
 			return false;
 		StringDocument thats = (StringDocument) that;
 		return this.value.equals(thats.value);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
-	 */
-	@Override
-	public boolean test(Constraint c)
-	{
-		return c.test(this);
 	}
 
 	/*
@@ -72,9 +59,9 @@ public class StringDocument extends Document
 	 * .ParameterizedDocumentVisitor, java.lang.Object)
 	 */
 	@Override
-	public <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data)
+	public <OUT, IN> OUT accept(ParameterizedDocumentVisitor<OUT, IN> visitor, IN data)
 	{
-		visitor.visit(this, data);
+		return visitor.visit(this, data);
 	}
 
 	/*
@@ -88,19 +75,5 @@ public class StringDocument extends Document
 	{
 		StringDocument sd = (StringDocument) other;
 		return this.value.compareTo(sd.value);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
-	 * .Modifier)
-	 */
-	@Override
-	public StringDocument modify(Modifier m)
-	{
-		if (m == null)
-			return this;
-		return new StringDocument(this.version, m.modify(this.value));
 	}
 }

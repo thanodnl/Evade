@@ -31,7 +31,7 @@ public class Scan
 			for (Document.Entry e : t) {
 				Document d = e.doc;
 				d = d.get(path);
-				if (d != null && d.test(c)) {
+				if (d != null && c.test(d)) {
 					System.out.println(e);
 					co++;
 				}

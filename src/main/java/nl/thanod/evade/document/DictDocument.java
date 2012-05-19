@@ -5,10 +5,8 @@ package nl.thanod.evade.document;
 
 import java.util.*;
 
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
-import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -116,17 +114,6 @@ public class DictDocument extends Document
 		return new DictDocument(map, version, false);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
-	 */
-	@Override
-	public boolean test(Constraint c)
-	{
-		return c.test(this);
-	}
-
 	@Override
 	public Document get(DocumentPath path)
 	{
@@ -155,9 +142,9 @@ public class DictDocument extends Document
 	 * .ParameterizedDocumentVisitor, java.lang.Object)
 	 */
 	@Override
-	public <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data)
+	public <OUT,IN> OUT accept(ParameterizedDocumentVisitor<OUT,IN> visitor, IN data)
 	{
-		visitor.visit(this, data);
+		return visitor.visit(this, data);
 	}
 
 	/*
@@ -191,20 +178,5 @@ public class DictDocument extends Document
 		if (oit.hasNext())
 			return -1;
 		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
-	 * .Modifier)
-	 */
-	@Override
-	public DictDocument modify(Modifier m)
-	{
-		Map<String, Document> data = new TreeMap<String, Document>();
-		for (Map.Entry<String, Document> e : this.data.entrySet())
-			data.put(e.getKey(), e.getValue().modify(m));
-		return new DictDocument(data, this.clearedOn, false);
 	}
 }

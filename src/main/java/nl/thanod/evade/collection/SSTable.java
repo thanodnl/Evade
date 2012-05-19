@@ -135,6 +135,9 @@ public class SSTable extends Collection implements Closeable
 
 	public static List<File> save(File datadir, String name, Iterable<Document.Entry> data, int maxdatasize) throws FileNotFoundException, IOException
 	{
+		if (!datadir.exists())
+			datadir.mkdirs();
+		
 		// be sure that the max datasize is not exceeding the system setting
 		maxdatasize = Math.min(maxdatasize, MAX_DATA_SIZE);
 

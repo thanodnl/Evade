@@ -3,16 +3,18 @@
  */
 package nl.thanod.evade.document.modifiers;
 
+import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.StringDocument;
 
 /**
  * @author nilsdijk
- *
  */
-public class UpperCase extends AbstractModifier
+public class UpperCase extends Modifier
 {
 
 	@Override
-	public String modify(String s){
-		return s.toUpperCase();
+	public Document visit(StringDocument doc, Void in)
+	{
+		return new StringDocument(doc.version, doc.value.toUpperCase());
 	}
 }

@@ -3,6 +3,7 @@
  */
 package nl.thanod.evade.query.string;
 
+import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
@@ -15,14 +16,12 @@ public class GreaterThanString extends StringConstraint
 		super(m,s);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.query.Constraint#test(nl.thanod.evade.document.Document)
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.query.string.StringConstraint#visit(nl.thanod.evade.document.StringDocument, java.lang.Void)
 	 */
 	@Override
-	public boolean doTest(String s)
+	public Boolean visit(StringDocument doc, Void v)
 	{
-		return s.compareTo(this.s) > 0;
+		return  doc.value.compareTo(this.s) > 0;
 	}
 }

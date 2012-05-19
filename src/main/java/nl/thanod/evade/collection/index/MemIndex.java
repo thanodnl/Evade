@@ -74,7 +74,7 @@ public class MemIndex extends Index
 
 		// modify the object before indexing if necessary 
 		if (this.modifier != null)
-			doc = doc.modify(this.modifier);
+			doc = doc.accept(this.modifier, null);
 
 		final Document search = doc;
 

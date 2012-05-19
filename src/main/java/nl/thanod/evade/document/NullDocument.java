@@ -3,10 +3,8 @@
  */
 package nl.thanod.evade.document;
 
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 import nl.thanod.evade.document.visitor.ParameterizedDocumentVisitor;
-import nl.thanod.evade.query.Constraint;
 
 /**
  * @author nilsdijk
@@ -25,18 +23,7 @@ public class NullDocument extends Document
 	@Override
 	public String toString()
 	{
-		return super.toString() + "null";
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#test(nl.thanod.evade.query.Constraint)
-	 */
-	@Override
-	public boolean test(Constraint c)
-	{
-		return c.test(this);
+		return super.toString() + "(null)null";
 	}
 
 	/*
@@ -58,9 +45,9 @@ public class NullDocument extends Document
 	 * .ParameterizedDocumentVisitor, java.lang.Object)
 	 */
 	@Override
-	public <User> void accept(ParameterizedDocumentVisitor<User> visitor, User data)
+	public <OUT, IN> OUT accept(ParameterizedDocumentVisitor<OUT, IN> visitor, IN data)
 	{
-		visitor.visit(this, data);
+		return visitor.visit(this, data);
 	}
 
 	/*
@@ -73,17 +60,5 @@ public class NullDocument extends Document
 	protected int compareValue(Document other)
 	{
 		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#modify(nl.thanod.evade.document.modifiers
-	 * .Modifier)
-	 */
-	@Override
-	public Document modify(Modifier m)
-	{
-		return this;
 	}
 }
