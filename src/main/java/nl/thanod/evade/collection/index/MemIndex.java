@@ -72,9 +72,7 @@ public class MemIndex extends Index
 
 		ensureSpace();
 
-		// modify the object before indexing if necessary 
-		if (this.modifier != null)
-			doc = doc.accept(this.modifier, null);
+		doc = Modifier.safeModify(this.modifier, doc);
 
 		final Document search = doc;
 

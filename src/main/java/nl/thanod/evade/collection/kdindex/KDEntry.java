@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 
 /**
@@ -82,17 +83,16 @@ public class KDEntry
 		for (Document.Entry e : table) {
 			Document[] documents = new Document[indexers.length];
 			for (int i = 0; i < indexers.length; i++) {
-				documents[i] = e.doc.get(indexers[i].path);
-				if (indexers[i].modifier != null)
-					documents[i] = documents[i].accept(indexers[i].modifier, null);
+				documents[i] = Modifier.safeModify(indexers[i].modifier, e.doc.get(indexers[i].path));
 			}
 			list.add(new KDEntry(e.id, documents));
 		}
 		list.trimToSize();
 		return list;
 	}
-	
-	public static void write(KDEntry entry, DataOutput out) throws IOException{
+
+	public static void write(KDEntry entry, DataOutput out) throws IOException
+	{
 		out.writeLong(entry.id.getMostSignificantBits());
 		out.writeLong(entry.id.getLeastSignificantBits());
 
@@ -102,13 +102,14 @@ public class KDEntry
 		for (int i = 0; i < size; i++)
 			entry.get(i).accept(DocumentSerializerVisitor.VISITOR, out);
 	}
-	
-	public static KDEntry read(DataInput in) throws IOException{
+
+	public static KDEntry read(DataInput in) throws IOException
+	{
 		UUID id = new UUID(in.readLong(), in.readLong());
 		int count = in.readInt();
-		
+
 		Document[] docs = new Document[count];
-		for (int i=0; i<count; i++)
+		for (int i = 0; i < count; i++)
 			docs[i] = DocumentSerializerVisitor.deserialize(in);
 		return new KDEntry(id, docs);
 	}

@@ -222,7 +222,16 @@ public abstract class Document implements Comparable<Document>
 		return version;
 	}
 
-	public abstract <OUT,IN> OUT accept(DocumentVisitor<OUT,IN> visitor, IN data);
+	/**
+	 * @param visitor
+	 * @return
+	 */
+	public final <OUT> OUT accept(DocumentVisitor<OUT, ?> visitor)
+	{
+		return this.accept(visitor, null);
+	}
+
+	public abstract <OUT, IN> OUT accept(DocumentVisitor<OUT, IN> visitor, IN data);
 
 	@Override
 	public final int compareTo(Document o)

@@ -254,7 +254,7 @@ public class IndexSerializer
 			if (doc.type == Type.DICT)
 				doc = new NullDocument(doc.version);
 
-			doc = doc.accept(modifier, null);
+			doc = Modifier.safeModify(modifier, doc);
 
 			// safe the index of the beginning of the entry
 			offsets.add(temp.getFilePointer());

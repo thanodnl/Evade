@@ -133,9 +133,8 @@ public class Constraint extends DocumentVisitor<Boolean, Void>
 
 	public boolean test(Document doc)
 	{
-		if (this.modifier != null)
-			doc = doc.accept(this.modifier, null);
-		return doc.accept(this, null);
+		doc = Modifier.safeModify(this.modifier, doc);
+		return doc.accept(this);
 	}
 
 }
