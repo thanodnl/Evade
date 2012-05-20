@@ -17,4 +17,13 @@ public class LowerCase extends Modifier
 	{
 		return new StringDocument(doc.version, doc.value.toLowerCase());
 	}
+
+	/* (non-Javadoc)
+	 * @see nl.thanod.evade.document.modifiers.Modifier#defaultVisit(nl.thanod.evade.document.Document, java.lang.Void)
+	 */
+	@Override
+	public Document defaultVisit(Document doc, Void data)
+	{
+		return new NullDocument(doc.version);
+	}
 }

@@ -21,7 +21,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(StringDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -33,7 +33,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(NullDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -45,7 +45,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(DictDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -57,8 +57,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(BooleanDocument doc, Void data)
 	{
-		// TODO Auto-generated method stub
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -70,7 +69,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(IntegerDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -82,7 +81,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(LongDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -94,7 +93,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(UUIDDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -106,7 +105,7 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(DoubleDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
 
 	/*
@@ -118,6 +117,20 @@ public abstract class Modifier extends DocumentVisitor<Document, Void>
 	@Override
 	public Document visit(FloatDocument doc, Void data)
 	{
-		return doc;
+		return defaultVisit(doc, data);
 	}
+
+	/**
+	 * This method is called when the implementor of a modifier did not
+	 * overwrite the specified visit method for the document being visited. It
+	 * is incorrect behavior to do type testing within the body of this
+	 * function. If it is desired you should override the correct visit method.
+	 * @param doc
+	 *            the {@link Document} not handeled by any other visit method
+	 * @param data
+	 *            --ignore--
+	 * @return the modified {@link Document}
+	 */
+	public abstract Document defaultVisit(Document doc, Void data);
+
 }
