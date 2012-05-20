@@ -27,10 +27,10 @@ public class KDIndexCreator
 	{
 		String name = "names";
 		File data = new File("data", name);
-		//		Table table = Table.load(data, name);
 		//		File ssname = new File(data, name + "0.sstable");
 		//		SSTable table = new SSTable(ssname);
 
+		//		Table table = Table.load(data, name);
 		//		IndexDescriptor idx1 = new IndexDescriptor(new DocumentPath("name"), LowerCase.INSTANCE); // axis one will index the names in lower case
 		//		IndexDescriptor idx2 = new IndexDescriptor(new DocumentPath("name"), LengthModifier.INSTANCE); // axis two will index the length of the names
 		//
@@ -43,7 +43,7 @@ public class KDIndexCreator
 		//
 		//		KDTree tree = KDTree.tree(list);
 
-		KDTree tree = new SSKDTree(new File(data, name + "0.kidx"));
+		KDTree tree = new SSKDTree(new File(data, name + "3.kidx"));
 
 		//		KDNode min = min(root, 0);
 		//		printPath(min, null);
@@ -63,7 +63,11 @@ public class KDIndexCreator
 		}
 		System.out.println(f + " of " + c);
 
-		//		KDSerializer.serialize(data, name, tree);
+		long took = System.nanoTime();
+		KDSerializer.serialize(data, name, tree);
+		took = System.nanoTime() - took;
+
+		System.out.println("persisting the kdtree took: " + took + "ns (" + took / 1000000 + "ms)");
 
 		//KDTraversing t = new KDTraversing(root, 2, 0);
 	}

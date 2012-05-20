@@ -3,10 +3,7 @@
  */
 package nl.thanod.evade.collection.kdindex;
 
-import java.io.DataOutput;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.store.Header.Type;
@@ -18,12 +15,22 @@ public class KDSerializer
 {
 	private final RandomAccessFile raf;
 	private final DataOutput out;
+
+	private final ByteArrayOutputStream bos;
+
 	private int dataoffset;
 	private int nodesoffset;
 
-	private KDSerializer(KDTree tree, File file) throws IOException
+	private KDSerializer(KDTree tree, File file, boolean buffered) throws IOException
 	{
-		this.out = this.raf = new RandomAccessFile(file, "rw");
+		this.raf = new RandomAccessFile(file, "rw");
+
+		if (buffered) {
+			this.out = new DataOutputStream(this.bos = new ByteArrayOutputStream(4 * 1024));
+		} else {
+			this.out = this.raf;
+			this.bos = null;
+		}
 
 		Header.reserve(raf, 2);
 		Header header = new Header();
@@ -39,10 +46,10 @@ public class KDSerializer
 
 		this.raf.seek(this.dataoffset);
 		this.raf.writeInt(start); // write the offset for the rootnode as first in the data blob
-		
+
 		this.raf.seek(0);
 		header.write(this.raf);
-		
+
 		this.raf.close();
 
 		System.out.println("persisted to: " + file);
@@ -55,7 +62,6 @@ public class KDSerializer
 		int left = serialize(node.left());
 		int right = serialize(node.right());
 
-		flush(); // be sure that everything is written to file before getting the pointer
 		int start = (int) raf.getFilePointer() - this.nodesoffset;
 
 		this.out.writeInt(left);
@@ -65,11 +71,17 @@ public class KDSerializer
 
 		KDEntry.write(entry, this.out);
 
+		flush(); // be sure that everything is written to file
 		return start;
 	}
 
-	private void flush()
+	private void flush() throws IOException
 	{
+		if (this.bos == null)
+			return;
+
+		this.raf.write(this.bos.toByteArray());
+		this.bos.reset();
 	}
 
 	public static void serialize(File dir, String name, KDTree tree) throws IOException
@@ -82,6 +94,6 @@ public class KDSerializer
 
 		f.getParentFile().mkdirs();
 
-		new KDSerializer(tree, f);
+		new KDSerializer(tree, f, true);
 	}
 }
