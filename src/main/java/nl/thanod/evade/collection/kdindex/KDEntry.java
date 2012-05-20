@@ -3,6 +3,9 @@
  */
 package nl.thanod.evade.collection.kdindex;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -10,6 +13,7 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 
 /**
  * @author nilsdijk
@@ -86,5 +90,26 @@ public class KDEntry
 		}
 		list.trimToSize();
 		return list;
+	}
+	
+	public static void write(KDEntry entry, DataOutput out) throws IOException{
+		out.writeLong(entry.id.getMostSignificantBits());
+		out.writeLong(entry.id.getLeastSignificantBits());
+
+		int size = entry.getDimensions();
+		out.writeInt(size);
+
+		for (int i = 0; i < size; i++)
+			entry.get(i).accept(DocumentSerializerVisitor.VISITOR, out);
+	}
+	
+	public static KDEntry read(DataInput in) throws IOException{
+		UUID id = new UUID(in.readLong(), in.readLong());
+		int count = in.readInt();
+		
+		Document[] docs = new Document[count];
+		for (int i=0; i<count; i++)
+			docs[i] = DocumentSerializerVisitor.deserialize(in);
+		return new KDEntry(id, docs);
 	}
 }

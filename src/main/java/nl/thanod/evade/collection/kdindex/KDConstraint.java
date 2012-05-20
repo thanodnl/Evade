@@ -23,14 +23,14 @@ public class KDConstraint
 
 	public boolean followLeft(KDNode node) // follow lower
 	{
-		if (this.lower == null || node.depth() % node.entry().getDimensions() != d)
+		if (this.lower == null || node.depth % node.entry().getDimensions() != d)
 			return true; // the tree is not separated on this axis
 		return this.lower.compareTo(node.entry().get(this.d)) < 0;
 	}
 
 	public boolean followRight(KDNode node) // follow lower
 	{
-		if (this.upper == null || node.depth() % node.entry().getDimensions() != d)
+		if (this.upper == null || node.depth % node.entry().getDimensions() != d)
 			return true; // the tree is not separated on this axis
 		return this.upper.compareTo(node.entry().get(this.d)) > 0;
 	}
@@ -43,23 +43,23 @@ public class KDConstraint
 
 	public static boolean followLeft(KDNode node, KDConstraint... constraints)
 	{
-		for (int i=constraints.length-1; i>=0; i--)
+		for (int i = constraints.length - 1; i >= 0; i--)
 			if (!constraints[i].followLeft(node))
 				return false;
 		return true;
 	}
-	
+
 	public static boolean followRight(KDNode node, KDConstraint... constraints)
 	{
-		for (int i=constraints.length-1; i>=0; i--)
+		for (int i = constraints.length - 1; i >= 0; i--)
 			if (!constraints[i].followRight(node))
 				return false;
 		return true;
 	}
-	
+
 	public static boolean test(KDEntry entry, KDConstraint... constraints)
 	{
-		for (int i=constraints.length-1; i>=0; i--)
+		for (int i = constraints.length - 1; i >= 0; i--)
 			if (!constraints[i].test(entry))
 				return false;
 		return true;

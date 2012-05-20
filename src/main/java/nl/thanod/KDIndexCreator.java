@@ -5,15 +5,12 @@ package nl.thanod;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import nl.thanod.evade.collection.SSTable;
+import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.collection.index.IndexDescriptor;
-import nl.thanod.evade.collection.kdindex.KDConstraint;
-import nl.thanod.evade.collection.kdindex.KDEntry;
-import nl.thanod.evade.collection.kdindex.KDNode;
+import nl.thanod.evade.collection.kdindex.*;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.IntegerDocument;
@@ -28,31 +25,33 @@ public class KDIndexCreator
 {
 	public static void main(String... args) throws IOException
 	{
-		File ssname = new File("/Users/nilsdijk/Documents/workspace/Evade/data/names/names0.sstable");
-		SSTable ss = new SSTable(ssname);
+		String name = "names";
+		File data = new File("data", name);
+		//		Table table = Table.load(data, name);
+		//		File ssname = new File(data, name + "0.sstable");
+		//		SSTable table = new SSTable(ssname);
 
-		IndexDescriptor idx1 = new IndexDescriptor(new DocumentPath("name"), LowerCase.INSTANCE); // axis one will index the names in lower case
-		IndexDescriptor idx2 = new IndexDescriptor(new DocumentPath("name"), LengthModifier.INSTANCE); // axis two will index the length of the names
+		//		IndexDescriptor idx1 = new IndexDescriptor(new DocumentPath("name"), LowerCase.INSTANCE); // axis one will index the names in lower case
+		//		IndexDescriptor idx2 = new IndexDescriptor(new DocumentPath("name"), LengthModifier.INSTANCE); // axis two will index the length of the names
+		//
+		//		List<KDEntry> list = KDEntry.list(table, idx1, idx2);
+		//		
+		//		Collections.sort(list, new KDEntry.Sorter(0));
+		//		System.out.println("name: " + list.get(0));
+		//		Collections.sort(list, new KDEntry.Sorter(1));
+		//		System.out.println("length: " + list.get(0));
+		//
+		//		KDTree tree = KDTree.tree(list);
 
-		List<KDEntry> list = KDEntry.list(ss, idx1, idx2);
-
-		Collections.sort(list, new KDEntry.Sorter(0));
-		System.out.println("name: " + list.get(0));
-		Collections.sort(list, new KDEntry.Sorter(1));
-		System.out.println("length: " + list.get(0));
-
-		KDNode root = KDNode.tree(list);
-
-		System.out.println(root);
-		System.out.println(root.size());
+		KDTree tree = new SSKDTree(new File(data, name + "0.kidx"));
 
 		//		KDNode min = min(root, 0);
 		//		printPath(min, null);
 
 		Document find = new IntegerDocument(0, 16);
 		KDConstraint[] constraints = new KDConstraint[] { new KDConstraint(new IntegerDocument(0, 14), null, 1), new KDConstraint(new StringDocument(0, "z"), null, 0) };
-		Iterator<KDEntry> it = KDNode.filter(root,constraints);
-//		Iterator<KDEntry> it = KDNode.all(root);
+		Iterator<KDEntry> it = KDNode.filter(tree, constraints);
+		//		Iterator<KDEntry> it = KDNode.all(root);
 		int c = 0, f = 0;
 		while (it.hasNext()) {
 			KDEntry e = it.next();
@@ -64,10 +63,12 @@ public class KDIndexCreator
 		}
 		System.out.println(f + " of " + c);
 
+		//		KDSerializer.serialize(data, name, tree);
+
 		//KDTraversing t = new KDTraversing(root, 2, 0);
 	}
 
-	public static void printPath(KDNode node, KDNode took)
+	public static void printPath(KDMemNode node, KDNode took)
 	{
 		if (node.parent != null)
 			printPath(node.parent, node);
