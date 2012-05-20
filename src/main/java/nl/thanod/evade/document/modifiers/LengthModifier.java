@@ -28,8 +28,8 @@ public class LengthModifier extends Modifier
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.modifiers.Modifier#defaultVisit(nl.thanod.evade
-	 * .document.Document, java.lang.Void)
+	 * nl.thanod.evade.document.visitor.AbstractDocumentVisitor#defaultVisit
+	 * (nl.thanod.evade.document.Document, java.lang.Object)
 	 */
 	@Override
 	public Document defaultVisit(Document doc, Void data)

@@ -3,7 +3,6 @@
  */
 package nl.thanod.evade.collection.kdindex;
 
-import java.util.*;
 
 
 /**
