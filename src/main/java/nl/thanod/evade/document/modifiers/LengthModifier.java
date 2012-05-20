@@ -8,6 +8,10 @@ import nl.thanod.evade.document.IntegerDocument;
 import nl.thanod.evade.document.StringDocument;
 
 /**
+ * {@link LengthModifier} creates an {@link IntegerDocument} for the
+ * {@link StringDocument} provided containing the length of the given
+ * {@link String}. The {@link Document#version} will be equal to the
+ * {@link StringDocument} given.
  * @author nilsdijk
  */
 public class LengthModifier extends Modifier
