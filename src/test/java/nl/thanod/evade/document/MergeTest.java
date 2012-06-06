@@ -45,10 +45,7 @@ public class MergeTest
 			StringBuilder sb = new StringBuilder();
 			Document b = null;
 			for (Document bs : bl) {
-				if (b == null)
-					b = bs;
-				else
-					b = Document.merge(b, bs);
+				b = Document.merge(b, bs);
 				if (sb.length() > 0)
 					sb.append(',');
 				sb.append(bs.version);

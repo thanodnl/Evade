@@ -40,22 +40,19 @@ public abstract class Document implements Comparable<Document>
 
 	public enum Type
 	{
-		NULL(0x00, true),
-		DICT(0x01, false),
-		STRING(0x0F, true),
-		BOOLEAN(0x10, true),
-		INTEGER(0x11, true),
-		LONG(0x12, true),
-		UUID(0x13, true),
-		DOUBLE(0x14, true),
-		FLOAT(0x15, true);
+		NULL(0x00),
+		DICT(0x01),
+		STRING(0x0F),
+		BOOLEAN(0x10),
+		INTEGER(0x11),
+		LONG(0x12),
+		UUID(0x13),
+		DOUBLE(0x14),
+		FLOAT(0x15);
 
 		public final int code;
-		public final boolean valuetype;
-
-		private Type(int code, boolean valuetype)
+		private Type(int code)
 		{
-			this.valuetype = valuetype;
 			this.code = code;
 		}
 
@@ -82,7 +79,7 @@ public abstract class Document implements Comparable<Document>
 		return this.version;
 	}
 
-	public static Document newest(Document one, Document two)
+	public static ValueDocument newest(ValueDocument one, ValueDocument two)
 	{
 		if (one.version == two.version) {
 			if (one.hashCode() < two.hashCode())
@@ -148,8 +145,8 @@ public abstract class Document implements Comparable<Document>
 		if (doc2 == null)
 			return doc1;
 
-		if (doc1.type.valuetype && doc2.type.valuetype)
-			return newest(doc1, doc2);
+		if (doc1 instanceof ValueDocument && doc2 instanceof ValueDocument)
+			return newest((ValueDocument)doc1, (ValueDocument)doc2);
 		if (doc1 instanceof DictDocument && doc2 instanceof DictDocument)
 			return mergeDictDict((DictDocument) doc1, (DictDocument) doc2);
 		else if (doc1 instanceof DictDocument)
@@ -198,10 +195,10 @@ public abstract class Document implements Comparable<Document>
 	 * @param values
 	 * @return
 	 */
-	public static Document newest(Iterable<Document> values)
+	public static Document newest(Iterable<ValueDocument> values)
 	{
-		Iterator<Document> it = values.iterator();
-		Document newest = it.next();
+		Iterator<ValueDocument> it = values.iterator();
+		ValueDocument newest = it.next();
 		while (it.hasNext())
 			newest = newest(newest, it.next());
 		return newest;
