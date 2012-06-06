@@ -8,7 +8,7 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public class BooleanDocument extends Document
+public class BooleanDocument extends ValueDocument
 {
 	public final boolean value;
 

@@ -8,7 +8,7 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public class DoubleDocument extends Document
+public class DoubleDocument extends ValueDocument
 {
 
 	public final double value;

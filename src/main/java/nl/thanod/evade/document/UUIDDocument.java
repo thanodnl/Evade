@@ -10,7 +10,7 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public class UUIDDocument extends Document
+public class UUIDDocument extends ValueDocument
 {
 
 	public final UUID value;

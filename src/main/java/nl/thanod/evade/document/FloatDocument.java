@@ -8,7 +8,7 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public class FloatDocument extends Document
+public class FloatDocument extends ValueDocument
 {
 
 	public final float value;

@@ -8,7 +8,7 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public class LongDocument extends Document
+public class LongDocument extends ValueDocument
 {
 
 	public final long value;
