@@ -50,7 +50,7 @@ public class SSKDTree extends KDTree implements Closeable
 			}
 			left = read(this.leftOffset, this.depth + 1);
 			if (left != null)
-				this.left = new WeakReference<>(left);
+				this.left = new WeakReference<KDNode>(left);
 			return left;
 		}
 
@@ -69,7 +69,7 @@ public class SSKDTree extends KDTree implements Closeable
 			}
 			right = read(this.rightOffset, this.depth + 1);
 			if (right != null)
-				this.right = new WeakReference<>(right);
+				this.right = new WeakReference<KDNode>(right);
 			return right;
 		}
 

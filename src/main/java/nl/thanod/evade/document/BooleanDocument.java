@@ -40,7 +40,11 @@ public class BooleanDocument extends ValueDocument
 	protected int compareValue(Document other)
 	{
 		BooleanDocument that = (BooleanDocument) other;
-		return Boolean.compare(this.value, that.value);
+		if (this.value == that.value)
+			return 0;
+		if (this.value)
+			return -1;
+		return 1;
 	}
 
 	@Override

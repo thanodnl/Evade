@@ -41,14 +41,14 @@ public abstract class KDNode
 			return null;
 
 		if (node.depth % node.entry().getDimensions() == d) {
-			return new Appenderator<>(sorted(node.left(), d), new SingleIterator<>(node.entry()), sorted(node.right(), d));
+			return new Appenderator<KDEntry>(sorted(node.left(), d), new SingleIterator<KDEntry>(node.entry()), sorted(node.right(), d));
 		}
-		return new Sorterator<>(new KDEntry.Sorter(d), sorted(node.left(), d), new SingleIterator<>(node.entry()), sorted(node.right(), d));
+		return new Sorterator<KDEntry>(new KDEntry.Sorter(d), sorted(node.left(), d), new SingleIterator<KDEntry>(node.entry()), sorted(node.right(), d));
 	}
 
 	public static Iterator<KDEntry> filter(final KDTree tree, final KDConstraint... constraints)
 	{
-		final Stack<KDNode> stack = new Stack<>();
+		final Stack<KDNode> stack = new Stack<KDNode>();
 		stack.push(tree.root());
 		return new Generator<KDEntry>() {
 			int c = 0;

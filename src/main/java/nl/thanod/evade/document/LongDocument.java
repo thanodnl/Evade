@@ -45,7 +45,11 @@ public class LongDocument extends ValueDocument
 	protected int compareValue(Document other)
 	{
 		LongDocument that = (LongDocument) other;
-		return Long.compare(this.value, that.value);
+		if (this.value == that.value)
+			return 0;
+		if (this.value > that.value)
+			return -1;
+		return 1;
 	}
 
 	@Override
