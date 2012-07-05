@@ -39,11 +39,11 @@ public class FloatDocument extends ValueDocument
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
-	 * .Document)
+	 * nl.thanod.evade.document.ValueDocument#compareValue(nl.thanod.evade.document
+	 * .ValueDocument)
 	 */
 	@Override
-	protected int compareValue(Document other)
+	protected int compareValue(ValueDocument other)
 	{
 		FloatDocument that = (FloatDocument) this;
 		return Float.compare(this.value, that.value);

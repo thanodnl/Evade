@@ -14,7 +14,7 @@ public class Sorterator<E> implements Iterator<E>
 	public final ArrayList<Peekerator<E>> source;
 	public final Comparator<Peekerator<E>> comp;
 
-	public Sorterator(Comparator<E> comp, Iterator<E>... source)
+	public Sorterator(Comparator<? super E> comp, Iterator<E>... source)
 	{
 		this.source = new ArrayList<Peekerator<E>>(source.length);
 		for (Iterator<E> it : source) {

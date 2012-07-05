@@ -54,11 +54,11 @@ public class StringDocument extends ValueDocument
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
-	 * .Document)
+	 * nl.thanod.evade.document.ValueDocument#compareValue(nl.thanod.evade.document
+	 * .ValueDocument)
 	 */
 	@Override
-	protected int compareValue(Document other)
+	protected int compareValue(ValueDocument other)
 	{
 		StringDocument sd = (StringDocument) other;
 		return this.value.compareTo(sd.value);

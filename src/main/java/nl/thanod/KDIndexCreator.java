@@ -6,17 +6,11 @@ package nl.thanod;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 
-import nl.thanod.evade.collection.Table;
-import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.collection.kdindex.*;
-import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.IntegerDocument;
 import nl.thanod.evade.document.StringDocument;
-import nl.thanod.evade.document.modifiers.LengthModifier;
-import nl.thanod.evade.document.modifiers.LowerCase;
+import nl.thanod.evade.document.ValueDocument;
 
 /**
  * @author nilsdijk
@@ -48,7 +42,7 @@ public class KDIndexCreator
 		//		KDNode min = min(root, 0);
 		//		printPath(min, null);
 
-		Document find = new IntegerDocument(0, 16);
+		ValueDocument find = new IntegerDocument(0, 16);
 		KDConstraint[] constraints = new KDConstraint[] { new KDConstraint(new IntegerDocument(0, 14), null, 1), new KDConstraint(new StringDocument(0, "z"), null, 0) };
 		Iterator<KDEntry> it = KDNode.filter(tree, constraints);
 		//		Iterator<KDEntry> it = KDNode.all(root);
@@ -92,13 +86,13 @@ public class KDIndexCreator
 		KDNode doc = node;
 		if (node.left() != null) {
 			KDNode tmp = min(node.left(), d);
-			if (tmp.entry().get(d).compareTo(doc.entry().get(d)) < 0) {
+			if (ValueDocument.VALUE_COMPARE.compare(tmp.entry().get(d), doc.entry().get(d)) < 0) {
 				doc = tmp;
 			}
 		}
 		if (node.right() != null) {
 			KDNode tmp = min(node.right(), d);
-			if (tmp.entry().get(d).compareTo(doc.entry().get(d)) < 0) {
+			if (ValueDocument.VALUE_COMPARE.compare(tmp.entry().get(d), doc.entry().get(d)) < 0) {
 				doc = tmp;
 			}
 		}

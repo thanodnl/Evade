@@ -16,9 +16,9 @@ public class Peekerator<E> implements Iterator<E>
 	public static class Sorter<E> implements Comparator<Peekerator<E>>
 	{
 
-		private final Comparator<E> comp;
+		private final Comparator<? super E> comp;
 
-		public Sorter(Comparator<E> comp)
+		public Sorter(Comparator<? super E> comp)
 		{
 			this.comp = comp;
 		}

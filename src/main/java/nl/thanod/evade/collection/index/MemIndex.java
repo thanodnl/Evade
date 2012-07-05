@@ -3,10 +3,13 @@
  */
 package nl.thanod.evade.collection.index;
 
+import java.util.Comparator;
 import java.util.UUID;
 
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.DocumentPath;
+import nl.thanod.evade.document.NullDocument;
+import nl.thanod.evade.document.ValueDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
@@ -21,7 +24,7 @@ public class MemIndex extends Index
 		protected MemEntry next;
 		protected MemEntry prev;
 
-		public MemEntry(UUID id, Document match)
+		public MemEntry(UUID id, ValueDocument match)
 		{
 			super(id, match);
 		}
@@ -74,13 +77,17 @@ public class MemIndex extends Index
 
 		doc = Modifier.safeModify(this.modifier, doc);
 
-		final Document search = doc;
+		final ValueDocument search;
+		if (doc instanceof ValueDocument)
+			search = (ValueDocument) doc;
+		else
+			search = new NullDocument(doc.version);
 
-		int putIn = Search.before(this.data, 0, this.count, new Comparable<MemEntry>() {
+		int putIn = Search.before(this.data, 0, this.count, new Comparable<MemIndex.MemEntry>() {
 			@Override
 			public int compareTo(MemEntry o)
 			{
-				return search.compareTo(o.match);
+				return ValueDocument.VALUE_COMPARE.compare(search, o.match);
 			}
 		});
 

@@ -7,10 +7,21 @@ import java.util.Comparator;
 
 /**
  * @author nilsdijk
- *
  */
-public abstract class ConvertedComparator<From, To extends Comparable<? super To>> implements Comparator<From>
+public abstract class ConvertedComparator<From, To> implements Comparator<From>
 {
+	private final Comparator<To> comparator;
+
+	public ConvertedComparator()
+	{
+		this.comparator = null;
+	}
+
+	public ConvertedComparator(Comparator<To> comparator)
+	{
+		this.comparator = comparator;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
@@ -20,7 +31,10 @@ public abstract class ConvertedComparator<From, To extends Comparable<? super To
 	{
 		To t1 = convert(o1);
 		To t2 = convert(o2);
-		return t1.compareTo(t2);
+		if (this.comparator != null)
+			return this.comparator.compare(t1, t2);
+		else
+			return ((Comparable<To>) t1).compareTo(t2);
 	}
 
 	protected abstract To convert(From from);

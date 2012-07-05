@@ -133,37 +133,4 @@ public class DictDocument extends Document
 	{
 		return visitor.visit(this, data);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
-	 * .Document)
-	 */
-	@Override
-	protected int compareValue(Document other)
-	{
-		DictDocument dother = (DictDocument) other;
-		Iterator<Map.Entry<String, Document>> tit = this.data.entrySet().iterator();
-		Iterator<Map.Entry<String, Document>> oit = dother.data.entrySet().iterator();
-
-		int diff;
-
-		while (tit.hasNext() && oit.hasNext()) {
-			Map.Entry<String, Document> te = tit.next();
-			Map.Entry<String, Document> oe = oit.next();
-
-			diff = te.getKey().compareTo(oe.getKey());
-			if (diff != 0)
-				return diff;
-			diff = te.getValue().compareTo(oe.getValue());
-			if (diff != 0)
-				return diff;
-		}
-		if (tit.hasNext())
-			return 1;
-		if (oit.hasNext())
-			return -1;
-		return 0;
-	}
 }

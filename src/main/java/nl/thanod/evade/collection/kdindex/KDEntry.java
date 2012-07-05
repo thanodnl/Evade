@@ -13,6 +13,8 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.NullDocument;
+import nl.thanod.evade.document.ValueDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 
@@ -22,7 +24,7 @@ import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 public class KDEntry
 {
 	public final UUID id;
-	private final Document[] data;
+	private final ValueDocument[] data;
 
 	public static class Sorter implements Comparator<KDEntry>
 	{
@@ -41,11 +43,11 @@ public class KDEntry
 		@Override
 		public int compare(KDEntry o1, KDEntry o2)
 		{
-			return o1.get(k).compareTo(o2.get(k));
+			return ValueDocument.VALUE_COMPARE.compare(o1.get(k), o2.get(k));
 		}
 	}
 
-	public KDEntry(UUID id, Document... documents)
+	public KDEntry(UUID id, ValueDocument... documents)
 	{
 		this.id = id;
 		this.data = documents;
@@ -56,7 +58,7 @@ public class KDEntry
 		return this.data.length;
 	}
 
-	public Document get(int k)
+	public ValueDocument get(int k)
 	{
 		return this.data[k];
 	}
@@ -81,9 +83,13 @@ public class KDEntry
 	{
 		ArrayList<KDEntry> list = new ArrayList<KDEntry>();
 		for (Document.Entry e : table) {
-			Document[] documents = new Document[indexers.length];
+			ValueDocument[] documents = new ValueDocument[indexers.length];
 			for (int i = 0; i < indexers.length; i++) {
-				documents[i] = Modifier.safeModify(indexers[i].modifier, e.doc.get(indexers[i].path));
+				Document doc = Modifier.safeModify(indexers[i].modifier, e.doc.get(indexers[i].path));
+				if (doc instanceof ValueDocument)
+					documents[i] = (ValueDocument) doc;
+				else
+					documents[i] = new NullDocument(doc.version);
 			}
 			list.add(new KDEntry(e.id, documents));
 		}
@@ -108,9 +114,9 @@ public class KDEntry
 		UUID id = new UUID(in.readLong(), in.readLong());
 		int count = in.readInt();
 
-		Document[] docs = new Document[count];
+		ValueDocument[] docs = new ValueDocument[count];
 		for (int i = 0; i < count; i++)
-			docs[i] = DocumentSerializerVisitor.deserialize(in);
+			docs[i] = (ValueDocument) DocumentSerializerVisitor.deserialize(in);
 		return new KDEntry(id, docs);
 	}
 }

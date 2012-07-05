@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.ValueDocument;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.ByteBufferDataInput;
@@ -24,7 +25,7 @@ public class SSIndex extends Index
 	{
 		public final int index;
 
-		public SSIndexEntry(int index, UUID id, Document match)
+		public SSIndexEntry(int index, UUID id, ValueDocument match)
 		{
 			super(id, match);
 			this.index = index;
@@ -81,7 +82,7 @@ public class SSIndex extends Index
 			DataInput in = new ByteBufferDataInput(buffer);
 			UUID id = new UUID(in.readLong(), in.readLong());
 			Document match = DocumentSerializerVisitor.deserialize(in);
-			return new SSIndexEntry(index, id, match);
+			return new SSIndexEntry(index, id, (ValueDocument) match);
 		} catch (Exception ball) {
 			// something went terribly wrong
 			// mainly index out of bounds

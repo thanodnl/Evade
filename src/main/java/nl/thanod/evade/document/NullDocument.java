@@ -40,11 +40,11 @@ public class NullDocument extends ValueDocument
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
-	 * .Document)
+	 * nl.thanod.evade.document.ValueDocument#compareValue(nl.thanod.evade.document
+	 * .ValueDocument)
 	 */
 	@Override
-	protected int compareValue(Document other)
+	protected int compareValue(ValueDocument other)
 	{
 		return 0;
 	}

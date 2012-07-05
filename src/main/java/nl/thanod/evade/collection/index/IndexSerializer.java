@@ -8,11 +8,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
 import java.util.*;
 
-import nl.thanod.evade.collection.index.Index.Entry;
-import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.Document.Type;
-import nl.thanod.evade.document.DocumentPath;
-import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
 import nl.thanod.evade.store.Header;
@@ -28,13 +25,7 @@ public class IndexSerializer
 
 	public static void compactIndices(File dir, String name, Iterable<? extends Index> indices) throws IOException
 	{
-		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(indices, new Comparator<Index.Entry>() {
-			@Override
-			public int compare(Entry o1, Entry o2)
-			{
-				return o1.match.compareTo(o2.match);
-			}
-		});
+		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(indices, Index.Entry.VALUE_COMPARE);
 
 		// write the final index
 		File file;
@@ -125,14 +116,14 @@ public class IndexSerializer
 		final ByteBuffer tmap = tempraf.getChannel().map(MapMode.READ_ONLY, 0, tempraf.getFilePointer());
 
 		// sort the indexlist
-		Collections.sort(offsets, new ConvertedComparator<Long, Document>() {
+		Collections.sort(offsets, new ConvertedComparator<Long, ValueDocument>(ValueDocument.VALUE_COMPARE) {
 			final ByteBuffer map = tmap;
 
 			@Override
-			protected Document convert(Long from)
+			protected ValueDocument convert(Long from)
 			{
 				this.map.position(from.intValue() + 16);
-				return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput(this.map));
+				return (ValueDocument) DocumentSerializerVisitor.deserialize(new ByteBufferDataInput(this.map));
 			}
 		});
 

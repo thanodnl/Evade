@@ -4,17 +4,18 @@
 package nl.thanod.evade.collection.kdindex;
 
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.ValueDocument;
 
 /**
  * @author nilsdijk
  */
 public class KDConstraint
 {
-	private final Comparable<? super Document> lower;
-	private final Comparable<? super Document> upper;
+	private final ValueDocument lower;
+	private final ValueDocument upper;
 	private final int d;
 
-	public KDConstraint(Comparable<? super Document> lower, Comparable<? super Document> upper, int d)
+	public KDConstraint(ValueDocument lower, ValueDocument upper, int d)
 	{
 		this.lower = lower;
 		this.upper = upper;
@@ -25,20 +26,20 @@ public class KDConstraint
 	{
 		if (this.lower == null || node.depth % node.entry().getDimensions() != d)
 			return true; // the tree is not separated on this axis
-		return this.lower.compareTo(node.entry().get(this.d)) < 0;
+		return ValueDocument.VALUE_COMPARE.compare(this.lower, node.entry().get(this.d)) < 0;
 	}
 
 	public boolean followRight(KDNode node) // follow lower
 	{
 		if (this.upper == null || node.depth % node.entry().getDimensions() != d)
 			return true; // the tree is not separated on this axis
-		return this.upper.compareTo(node.entry().get(this.d)) > 0;
+		return ValueDocument.VALUE_COMPARE.compare(this.upper, node.entry().get(this.d)) > 0;
 	}
 
 	public boolean test(KDEntry entry)
 	{
-		Document e = entry.get(this.d);
-		return (this.lower == null || this.lower.compareTo(e) < 0) && (this.upper == null || this.upper.compareTo(e) > 0);
+		ValueDocument e = entry.get(this.d);
+		return (this.lower == null || ValueDocument.VALUE_COMPARE.compare(this.lower, e) < 0) && (this.upper == null || ValueDocument.VALUE_COMPARE.compare(this.upper, e) > 0);
 	}
 
 	public static boolean followLeft(KDNode node, KDConstraint... constraints)

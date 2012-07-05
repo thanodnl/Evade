@@ -10,11 +10,11 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 /**
  * @author nilsdijk
  */
-public abstract class Document implements Comparable<Document>
+public abstract class Document
 {
 	public static class Entry
 	{
-		public static Comparator<Entry> COMPARATOR = new Comparator<Document.Entry>() {
+		public static final Comparator<Entry> COMPARATOR = new Comparator<Document.Entry>() {
 			@Override
 			public int compare(Entry o1, Entry o2)
 			{
@@ -229,17 +229,6 @@ public abstract class Document implements Comparable<Document>
 	}
 
 	public abstract <OUT, IN> OUT accept(DocumentVisitor<OUT, IN> visitor, IN data);
-
-	@Override
-	public final int compareTo(Document o)
-	{
-		int diff = this.type.code - o.type.code;
-		if (diff != 0)
-			return diff;
-		return this.compareValue(o);
-	}
-
-	protected abstract int compareValue(Document other);
 
 	public Document get(DocumentPath path)
 	{

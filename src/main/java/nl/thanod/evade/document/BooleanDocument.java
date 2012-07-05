@@ -33,11 +33,11 @@ public class BooleanDocument extends ValueDocument
 	/*
 	 * (non-Javadoc)
 	 * @see
-	 * nl.thanod.evade.document.Document#compareValue(nl.thanod.evade.document
-	 * .Document)
+	 * nl.thanod.evade.document.ValueDocument#compareValue(nl.thanod.evade.document
+	 * .ValueDocument)
 	 */
 	@Override
-	protected int compareValue(Document other)
+	protected int compareValue(ValueDocument other)
 	{
 		BooleanDocument that = (BooleanDocument) other;
 		if (this.value == that.value)

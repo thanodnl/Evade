@@ -1,0 +1,4 @@
+<Project projectName="Evade">
+  <Jar>./target/Evade-0.0.1-SNAPSHOT.jar</Jar>
+  <SrcDir>./src/main/java</SrcDir>
+</Project>

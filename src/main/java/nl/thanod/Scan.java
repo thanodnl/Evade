@@ -36,7 +36,7 @@ public class Scan
 					co++;
 				}
 			}
-			float took = (System.nanoTime() - start) / 1000000;
+			double took = (System.nanoTime() - start) / 1000000.0;
 			System.out.println("took: " + took + "ms");
 			System.out.println("found: " + co);
 		}

@@ -92,7 +92,9 @@ public class KDSerializer
 			f = new File(dir, name + (fi++) + ".kidx");
 		} while (f.exists());
 
-		f.getParentFile().mkdirs();
+		if (!f.getParentFile().mkdirs()) {
+			throw new IOException("Could not make parent directories to: " + f.getParentFile());
+		}
 
 		new KDSerializer(tree, f, true);
 	}

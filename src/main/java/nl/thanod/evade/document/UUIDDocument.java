@@ -44,10 +44,10 @@ public class UUIDDocument extends ValueDocument
 	 * .Document)
 	 */
 	@Override
-	protected int compareValue(Document other)
+	protected int compareValue(ValueDocument other)
 	{
 		UUIDDocument that = (UUIDDocument) other;
-		return this.compareTo(that);
+		return this.value.compareTo(that.value);
 	}
 
 	@Override
