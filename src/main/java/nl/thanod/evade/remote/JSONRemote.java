@@ -19,12 +19,16 @@ import nl.thanod.evade.document.visitor.DocumentVisitor;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author nilsdijk
  */
 public class JSONRemote extends Remote
 {
+	private static Logger log = LoggerFactory.getLogger(JSONRemote.class);
+
 	public static class JSONVisitor extends DocumentVisitor<Object, Void>
 	{
 
@@ -174,7 +178,7 @@ public class JSONRemote extends Remote
 		try {
 			while (jto.more()) {
 				JSONObject jso = new JSONObject(jto);
-				System.out.println("received: " + jso);
+				log.debug("Request: {}", jso);
 
 				// interpert the request
 				// test for request identifier
@@ -229,10 +233,7 @@ public class JSONRemote extends Remote
 			}
 		} catch (JSONException ball) {
 			send(s, createError("Error while parsing json in request", -1));
-
-			// TODO Auto-generated catch block
-			System.err.println("Error while interperting the json data");
-			ball.printStackTrace();
+			log.error("Error while interperting the json data", ball);
 		}
 	}
 
@@ -243,8 +244,7 @@ public class JSONRemote extends Remote
 			data.write(writer);
 			writer.flush();
 		} catch (JSONException ball) {
-			System.err.println("Unable to write json to socket");
-			ball.printStackTrace();
+			log.error("Unable to write json to socket", ball);
 		}
 	}
 
@@ -260,8 +260,7 @@ public class JSONRemote extends Remote
 			error.put("session", packetid);
 			error.put("error", reason);
 		} catch (JSONException ball) {
-			// TODO Auto-generated catch block
-			ball.printStackTrace();
+			log.error("Error while creating json object", ball);
 			return null;
 		}
 		return error;
@@ -280,14 +279,13 @@ public class JSONRemote extends Remote
 			ss = new ServerSocket(this.port);
 		} catch (IOException ball) {
 			// TODO Auto-generated catch block
-			System.err.println("Unable to start the server");
-			ball.printStackTrace();
+			log.error("Unable to start the server", ball);
 			return;
 		}
 
 		try {
 			while (true) {
-				System.out.println("Waiting for connection");
+				log.info("Waiting for connection");
 				Socket s = ss.accept();
 
 				// connection is handled within this thread so only one connection is possible
@@ -300,15 +298,13 @@ public class JSONRemote extends Remote
 				}
 			}
 		} catch (IOException ball) {
-			// TODO Auto-generated catch block
-			System.err.println("Error while accepting socket");
-			ball.printStackTrace();
+			log.error("Error while accepting socket", ball);
 		} finally {
 			if (ss != null) {
 				try {
 					ss.close();
 				} catch (IOException ball) {
-					ball.printStackTrace();
+					log.error("could not close socket", ball);
 				}
 			}
 		}

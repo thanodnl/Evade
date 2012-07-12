@@ -7,13 +7,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import nl.thanod.evade.remote.Remote;
-import nl.thanod.evade.remote.RemoteBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -22,30 +21,26 @@ import org.yaml.snakeyaml.constructor.Constructor;
  */
 public class Main
 {
-	private static final List<Remote> remotes = new ArrayList<Remote>();
-	private static Database db;
+	private static Logger log = LoggerFactory.getLogger(Main.class);
 
 	public static void main(String... args) throws FileNotFoundException
 	{
-		InputStream stream = new FileInputStream(new File("config", "config.yml"));
+		File configFile = findConfigFile();
+		InputStream stream = new FileInputStream(configFile);
 		Yaml yaml = new Yaml(new Constructor(DatabaseConfiguration.class));
 		DatabaseConfiguration config = (DatabaseConfiguration) yaml.load(stream);
-		
-		config.preprocess();
-		
-		System.out.println(config);
-		System.out.println(config.datadir.getAbsolutePath());
+		log.info("Loaded configuration from {}", configFile.getAbsolutePath());
 
 		// initialize the database
-		Main.db = config.loadDatabase();
+		Database db = config.loadDatabase();
 
 		// initialize the remote interfaces
-		loadRemotes(config.remote);
-		for (Remote r : Main.remotes) {
-			System.out.println("initializing " + r);
+		List<Remote> remotes = config.loadRemotes();
+		for (Remote r : remotes) {
+			log.info("Booting {}", r);
 
 			// put the database on the remote
-			r.setDB(Main.db);
+			r.setDB(db);
 
 			// start the remote on a new thread
 			Thread t = new Thread(r);
@@ -55,19 +50,14 @@ public class Main
 	}
 
 	/**
-	 * @param remote
+	 * Look at default places to find the configuration file Currently it just
+	 * returns a static file wether it exists or not.
+	 * <p>
+	 * Future: look at /etc/evade/config.yml and ~/.evade/config.yml etc.
+	 * @return
 	 */
-	private static void loadRemotes(List<Map<String, Object>> remotes)
+	private static File findConfigFile()
 	{
-		if (remotes != null) {
-			for (Map<String, Object> rc : remotes) {
-				Remote remote = RemoteBuilder.load(rc);
-				if (remote == null) {
-					System.err.println("No remote for " + rc);
-					continue;
-				}
-				Main.remotes.add(remote);
-			}
-		}
+		return new File("config", "config.yml");
 	}
 }
