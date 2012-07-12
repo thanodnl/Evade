@@ -1,0 +1,7 @@
+datadir: data/
+remote:
+  - type: JSON
+    port: 2225
+  - type: Protobuf
+    port: 12345
+    

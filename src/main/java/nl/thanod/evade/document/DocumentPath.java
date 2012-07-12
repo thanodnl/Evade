@@ -19,6 +19,12 @@ public class DocumentPath
 		this.length = length;
 	}
 
+	public DocumentPath(String path)
+	{
+		// splitting is on regex so you need to escape a dot
+		this(path.split("\\."));
+	}
+
 	public DocumentPath(String... path)
 	{
 		this.path = path;

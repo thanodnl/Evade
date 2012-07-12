@@ -41,6 +41,11 @@ public class Table extends Collection
 		this.sstables = new LinkedList<SSTable>();
 	}
 
+	public String getName()
+	{
+		return this.name;
+	}
+
 	private void addSSTable(SSTable ss)
 	{
 		this.sstables.add(ss);
@@ -201,11 +206,13 @@ public class Table extends Collection
 			}
 		});
 
-		for (File f : files) {
-			try {
-				t.addSSTable(new SSTable(f));
-			} catch (IOException ball) {
-				ball.printStackTrace();
+		if (files != null) {
+			for (File f : files) {
+				try {
+					t.addSSTable(new SSTable(f));
+				} catch (IOException ball) {
+					ball.printStackTrace();
+				}
 			}
 		}
 		return t;
