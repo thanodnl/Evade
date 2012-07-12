@@ -25,7 +25,17 @@ public class Main
 
 	public static void main(String... args) throws FileNotFoundException
 	{
-		File configFile = findConfigFile();
+		// parse the commandline arguments
+		Parameters params = Parameters.parse(args);
+
+		// find the config file and test if it exists
+		File configFile = params.getConfigFile();
+		if (!configFile.exists()) {
+			log.error("Config file not found ({})", configFile);
+			System.exit(-1);
+		}
+
+		// open the configuration
 		InputStream stream = new FileInputStream(configFile);
 		Yaml yaml = new Yaml(new Constructor(DatabaseConfiguration.class));
 		DatabaseConfiguration config = (DatabaseConfiguration) yaml.load(stream);
@@ -47,17 +57,5 @@ public class Main
 			t.setName("Remote: " + r.toString());
 			t.start();
 		}
-	}
-
-	/**
-	 * Look at default places to find the configuration file Currently it just
-	 * returns a static file wether it exists or not.
-	 * <p>
-	 * Future: look at /etc/evade/config.yml and ~/.evade/config.yml etc.
-	 * @return
-	 */
-	private static File findConfigFile()
-	{
-		return new File("config", "config.yml");
 	}
 }
