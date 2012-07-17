@@ -97,7 +97,8 @@ public final class Search
 		}
 		T t = scope.get(found);
 		if (compare.compareTo(t) > 0)
-			t = scope.get(found + 1);
+			if (found + 1 < size)
+				t = scope.get(found + 1);
 		return t;
 	}
 

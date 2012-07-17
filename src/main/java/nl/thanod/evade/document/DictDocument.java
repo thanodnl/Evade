@@ -40,9 +40,7 @@ public class DictDocument extends Document
 			Map.Entry<String, Document> content = data.entrySet().iterator().next();
 			this.data = Collections.singletonMap(content.getKey(), content.getValue());
 		} else if (clone) {
-			this.data = new TreeMap<String, Document>();
-			for (Map.Entry<String, Document> e : data.entrySet())
-				this.data.put(e.getKey(), e.getValue());
+			this.data = new HashMap<String, Document>(data);
 		} else {
 			this.data = data;
 		}
@@ -101,7 +99,7 @@ public class DictDocument extends Document
 	{
 		if (version <= this.clearedOn)
 			return this;
-		Map<String, Document> map = new TreeMap<String, Document>();
+		Map<String, Document> map = new HashMap<String, Document>();
 		for (Map.Entry<String, Document> e : this.data.entrySet()) {
 			if (e.getValue().version < version)
 				continue;

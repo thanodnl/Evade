@@ -8,6 +8,7 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 import nl.thanod.evade.collection.index.IndexSerializer;
@@ -20,25 +21,32 @@ import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author nilsdijk
  */
 public class Table extends Collection
 {
 
-	protected List<SSTable> sstables;
+	protected static final Logger log = LoggerFactory.getLogger(Table.class);
+
+	// SSTables should be unique on the file they are based on
+	protected Set<SSTable> sstables;
+
 	protected volatile Memtable memtable;
 	protected volatile MemIndex memindex;
 
-	private final File directory;
-	private final String name;
+	public final File directory;
+	public final String name;
 
 	private Table(File directory, String name)
 	{
 		this.directory = directory;
 		this.name = name;
 
-		this.sstables = new LinkedList<SSTable>();
+		this.sstables = new HashSet<SSTable>();
 	}
 
 	public String getName()
@@ -68,6 +76,38 @@ public class Table extends Collection
 			}
 		}
 		return result;
+	}
+
+	public void majorCompact(Executor exec)
+	{
+		TableCompacter compacter = new TableCompacter(this);
+
+		// add and remove sstables after compacting
+		compacter.addListener(new TableCompacter.CompacterListener() {
+			@Override
+			public void compacted(Iterable<SSTable> removed, Iterable<SSTable> created)
+			{
+				// add the newly created tables
+				for (SSTable ss : created)
+					Table.this.sstables.add(ss);
+
+				// remove old tables
+				for (SSTable ss : removed) {
+					if (Table.this.sstables.remove(ss)) {
+						Table.log.info("Closed SSTable {} after compacting", ss.file);
+						ss.remove();
+					} else {
+						Table.log.error("Could not remove {} from the tables", ss.file);
+					}
+				}
+			}
+		});
+
+		// run the compaction
+		if (exec != null)
+			exec.execute(compacter);
+		else
+			compacter.run();
 	}
 
 	public void maintainIndex(DocumentPath path, Modifier modifier)

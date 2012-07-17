@@ -64,7 +64,7 @@ public class UUIDPositionIndex implements Search.Searchable<UUIDPositionIndex.Po
 
 	public UUIDPositionIndex.Pointer before(final UUID id)
 	{
-		return Search.binsearch(this, new Comparable<Pointer>() {
+		return Search.before(this, new Comparable<Pointer>() {
 
 			@Override
 			public int compareTo(Pointer o)

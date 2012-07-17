@@ -16,9 +16,9 @@ import nl.thanod.evade.util.iterator.Sorterator;
 public class Documenter implements Iterable<Document.Entry>
 {
 
-	private final Iterable<? extends Iterable<Entry>> data;
+	private final Iterable<? extends Iterable<Document.Entry>> data;
 
-	public Documenter(Collection<? extends Iterable<Document.Entry>> input)
+	public Documenter(Iterable<? extends Iterable<Document.Entry>> input)
 	{
 		this.data = input;
 	}
@@ -28,6 +28,16 @@ public class Documenter implements Iterable<Document.Entry>
 		ArrayList<Iterable<Document.Entry>> list = new ArrayList<Iterable<Entry>>();
 		list.add(ide);
 		list.addAll(input);
+
+		this.data = list;
+	}
+
+	public Documenter(Iterable<Document.Entry> ide, Iterable<? extends Iterable<Document.Entry>> input)
+	{
+		ArrayList<Iterable<Document.Entry>> list = new ArrayList<Iterable<Entry>>();
+		list.add(ide);
+		for (Iterable<Document.Entry> e : input)
+			list.add(e);
 
 		this.data = list;
 	}

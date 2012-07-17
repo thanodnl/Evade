@@ -180,15 +180,18 @@ public abstract class Document
 		long cleared = Math.max(doc1.clearedOn, doc2.clearedOn);
 		doc1 = doc1.clearOn(cleared);
 		doc2 = doc2.clearOn(cleared);
-		Map<String, Document> map = new TreeMap<String, Document>();
+		Map<String, Document> map = new HashMap<String, Document>();
+		
+		// populate the new map with the contents of the first dict
 		for (Map.Entry<String, Document> e : doc1.entrySet())
 			map.put(e.getKey(), e.getValue());
+		
+		// merge the second dict into it
 		for (Map.Entry<String, Document> e : doc2.entrySet()) {
-			Document d = e.getValue();
-			if (map.containsKey(e.getKey()))
-				d = Document.merge(d, map.get(e.getKey()));
+			Document d = Document.merge(e.getValue(), map.get(e.getKey()));
 			map.put(e.getKey(), d);
 		}
+		
 		return new DictDocument(map, cleared, false);
 	}
 

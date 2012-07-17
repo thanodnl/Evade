@@ -19,23 +19,29 @@ import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.ByteBufferDataInput;
 import nl.thanod.evade.util.iterator.Generator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author nilsdijk
  */
 public class SSTable extends Collection implements Closeable
 {
+	private static final Logger log = LoggerFactory.getLogger(SSTable.class);
+
 	private static final int DEF_DATA_SIZE = 256 * 1024 * 1024;
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	public final File file;
 
-	private final RandomAccessFile raf;
 	protected final UUIDPositionIndex index;
-	private final ByteBuffer datamap;
+
 	private final BloomFilter bloom;
 
-	private final UUID min;
+	private final ByteBuffer datamap;
 	private final UUID max;
+	private final UUID min;
+	private final RandomAccessFile raf;
 
 	public SSTable(File file) throws IOException
 	{
@@ -56,17 +62,18 @@ public class SSTable extends Collection implements Closeable
 		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.io.Closeable#close()
+	 */
 	@Override
-	protected void finalize()
+	public void close()
 	{
-		this.close();
-	}
-
-	public boolean earlySkip(Bloom<?> bloom)
-	{
-		if (this.bloom == null)
-			return false;
-		return !bloom.containedBy(this.bloom);
+		try {
+			this.raf.close();
+		} catch (IOException ball) {
+			//TODO log exception for closing SSTable, not that you can do much about it but it would be nice to mesure the number of failures here
+		}
 	}
 
 	/*
@@ -79,6 +86,31 @@ public class SSTable extends Collection implements Closeable
 		if (this.min.compareTo(id) > 0 || this.max.compareTo(id) < 0)
 			return false;
 		return this.index.before(id).id.equals(id);
+	}
+
+	public boolean earlySkip(Bloom<?> bloom)
+	{
+		if (this.bloom == null)
+			return false;
+		return !bloom.containedBy(this.bloom);
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SSTable other = (SSTable) obj;
+		if (file == null) {
+			if (other.file != null)
+				return false;
+		} else if (!file.equals(other.file))
+			return false;
+		return true;
 	}
 
 	/*
@@ -97,6 +129,15 @@ public class SSTable extends Collection implements Closeable
 	public Document get(UUIDPositionIndex.Pointer pointer)
 	{
 		return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput((ByteBuffer) this.datamap.duplicate().position(pointer.pos)));
+	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((file == null) ? 0 : file.hashCode());
+		return result;
 	}
 
 	/*
@@ -125,6 +166,32 @@ public class SSTable extends Collection implements Closeable
 				return new Entry(p.id, DocumentSerializerVisitor.deserialize(input));
 			}
 		};
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#size()
+	 */
+	@Override
+	public int size()
+	{
+		return this.index.count();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.collection.Collection#ids()
+	 */
+	@Override
+	public Iterable<UUID> uuids()
+	{
+		return this.index.uuids();
+	}
+
+	@Override
+	protected void finalize()
+	{
+		this.close();
 	}
 
 	public static List<File> save(File directory, String name, Iterable<Document.Entry> data) throws FileNotFoundException, IOException
@@ -189,6 +256,11 @@ public class SSTable extends Collection implements Closeable
 				dos.writeLong(e.getKey().getMostSignificantBits());
 				dos.writeLong(e.getKey().getLeastSignificantBits());
 				dos.writeInt(e.getValue());
+
+				if (bos.size() > 10 * 1024) {
+					raf.write(bos.toByteArray());
+					bos.reset();
+				}
 			}
 			raf.write(bos.toByteArray());
 			bos.reset();
@@ -209,37 +281,17 @@ public class SSTable extends Collection implements Closeable
 		return files;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see nl.thanod.evade.collection.Collection#size()
+	/**
+	 * 
 	 */
-	@Override
-	public int size()
+	public void remove()
 	{
-		return this.index.count();
-	}
+		this.close();
 
-	/*
-	 * (non-Javadoc)
-	 * @see nl.thanod.evade.collection.Collection#ids()
-	 */
-	@Override
-	public Iterable<UUID> uuids()
-	{
-		return this.index.uuids();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.io.Closeable#close()
-	 */
-	@Override
-	public void close()
-	{
-		try {
-			this.raf.close();
-		} catch (IOException ball) {
-			//TODO log exception for closing SSTable, not that you can do much about it but it would be nice to mesure the number of failures here
+		// delete the file
+		if (!this.file.delete()) {
+			log.info("Can not delete {}, the file is marked for removal on exit", this.file);
+			this.file.deleteOnExit();
 		}
 	}
 }

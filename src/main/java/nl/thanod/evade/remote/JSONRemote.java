@@ -6,16 +6,15 @@ package nl.thanod.evade.remote;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.UUID;
 
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -152,7 +151,8 @@ public class JSONRemote extends Remote
 
 	public enum Mode
 	{
-		GET;
+		GET,
+		WHERE;
 	}
 
 	private Database db;
@@ -173,6 +173,7 @@ public class JSONRemote extends Remote
 
 	public void handleConnection(Socket s) throws IOException
 	{
+		log.info("got a connection");
 		InputStream inputStream = s.getInputStream();
 		JSONTokener jto = new JSONTokener(new InputStreamReader(inputStream));
 		try {
@@ -200,11 +201,13 @@ public class JSONRemote extends Remote
 				JSONObject response = new JSONObject();
 				response.put("session", sessionid);
 
+				String collection;
+				Table table;
 				switch (mode) {
 					case GET:
 						// read stuff from database
-						String collection = jso.getString("collection");
-						Table table = db.getCollection(collection);
+						collection = jso.getString("collection");
+						table = db.getCollection(collection);
 						if (table == null) {
 							send(s, createError("No such collection (" + collection + ")", sessionid));
 							continue;
@@ -226,6 +229,10 @@ public class JSONRemote extends Remote
 
 						send(s, response);
 						break;
+					case WHERE:
+						if (!where(s, jso, sessionid))
+							continue;
+						break;
 					default:
 						send(s, createError("Unknown mode " + modename, sessionid));
 						continue;
@@ -237,9 +244,72 @@ public class JSONRemote extends Remote
 		}
 	}
 
+	private boolean where(Socket s, JSONObject jso, int sessionid) throws JSONException, IOException
+	{
+		String collection = jso.getString("collection");
+		Table table = db.getCollection(collection);
+		if (table == null) {
+			send(s, createError("No such collection (" + collection + ")", sessionid));
+			return false;
+		}
+		JSONArray query = null;
+		try {
+			query = jso.getJSONArray("query");
+		} catch (JSONException ball) {
+			send(s, createError("Query is not there or it isn't an array", sessionid));
+			return false;
+		}
+
+		if (query == null || query.length() != 2) {
+			send(s, createError("No valid query found. A valid query contains 2 items in an array", sessionid));
+			return false;
+		}
+
+		String field = query.getString(0);
+		String content = query.getString(1);
+		DocumentPath path = new DocumentPath(field);
+
+		int limit = 0;
+		if (jso.has("limit"))
+			limit = jso.getInt("limit");
+		int count = 0;
+
+		Iterator<Document.Entry> it = table.iterator();
+		while (it.hasNext()) {
+			Document.Entry e = it.next();
+
+			Document d = e.doc.get(path);
+			if (d == null)
+				continue;
+			if (!(d instanceof StringDocument))
+				continue;
+
+			StringDocument sd = (StringDocument) d;
+			if (sd.value.toLowerCase().startsWith(content)) {
+				JSONObject response = new JSONObject();
+				response.put("session", sessionid);
+				response.put("data", e.doc.accept(JSONVisitor.INSTANCE));
+				send(s, response);
+				count++;
+				if (limit == count)
+					break;
+			}
+
+		}
+
+		JSONObject response = new JSONObject();
+		response.put("session", sessionid);
+		response.put("eof", true);
+		response.put("count", count);
+		send(s, response);
+
+		return true;
+	}
+
 	public void send(Socket s, JSONObject data) throws IOException
 	{
 		try {
+			log.debug("send {}", data);
 			Writer writer = new OutputStreamWriter(s.getOutputStream());
 			data.write(writer);
 			writer.flush();

@@ -8,8 +8,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.net.ProtocolException;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
 import nl.thanod.evade.document.*;
@@ -244,7 +244,7 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 				case FLOAT:
 					return new FloatDocument(stream.readLong(), stream.readFloat());
 				case DICT:
-					Map<String, Document> map = new TreeMap<String, Document>();
+					Map<String, Document> map = new HashMap<String, Document>();
 					while (stream.readByte() != 0)
 						map.put(stream.readUTF(), deserialize(stream));
 					return new DictDocument(map, stream.readLong(), false);
