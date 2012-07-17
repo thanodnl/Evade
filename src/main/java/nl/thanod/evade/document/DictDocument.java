@@ -56,7 +56,7 @@ public class DictDocument extends Document
 	@Override
 	public String toString()
 	{
-		return "(" + this.version + '/' + this.clearedOn + ") " + this.data.toString();
+		return "(" + this.version + '/' + this.clearedOn + ":" + this.type.name() + ") " + this.data.toString();
 	}
 
 	/**

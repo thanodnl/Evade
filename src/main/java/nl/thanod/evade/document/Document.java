@@ -51,6 +51,7 @@ public abstract class Document
 		FLOAT(0x15);
 
 		public final int code;
+
 		private Type(int code)
 		{
 			this.code = code;
@@ -93,7 +94,7 @@ public abstract class Document
 	@Override
 	public String toString()
 	{
-		return "(" + this.version + ") ";
+		return "(" + this.version + ":" + this.type.name() + ") ";
 	}
 
 	@Override
@@ -146,7 +147,7 @@ public abstract class Document
 			return doc1;
 
 		if (doc1 instanceof ValueDocument && doc2 instanceof ValueDocument)
-			return newest((ValueDocument)doc1, (ValueDocument)doc2);
+			return newest((ValueDocument) doc1, (ValueDocument) doc2);
 		if (doc1 instanceof DictDocument && doc2 instanceof DictDocument)
 			return mergeDictDict((DictDocument) doc1, (DictDocument) doc2);
 		else if (doc1 instanceof DictDocument)

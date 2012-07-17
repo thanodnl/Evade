@@ -25,7 +25,7 @@ public class StringDocument extends ValueDocument
 	@Override
 	public String toString()
 	{
-		return super.toString() + "(String)" + '"' + this.value + '"';
+		return super.toString() + '"' + this.value + '"';
 	}
 
 	@Override

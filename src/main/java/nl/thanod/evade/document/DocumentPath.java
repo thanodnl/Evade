@@ -8,6 +8,8 @@ package nl.thanod.evade.document;
  */
 public class DocumentPath
 {
+	public static final DocumentPath EMPTY = new DocumentPath(new String[0]);
+	
 	private final String[] path;
 	private final int offset;
 	private final int length;

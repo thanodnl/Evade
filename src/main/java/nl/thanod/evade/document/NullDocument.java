@@ -22,7 +22,7 @@ public class NullDocument extends ValueDocument
 	@Override
 	public String toString()
 	{
-		return super.toString() + "(null)null";
+		return super.toString() + "null";
 	}
 
 	/*

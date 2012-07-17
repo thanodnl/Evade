@@ -52,7 +52,7 @@ public class FloatDocument extends ValueDocument
 	@Override
 	public String toString()
 	{
-		return super.toString() + "(float)" + this.value;
+		return super.toString() + this.value;
 	}
 
 }

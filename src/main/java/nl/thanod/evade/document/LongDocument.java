@@ -55,7 +55,7 @@ public class LongDocument extends ValueDocument
 	@Override
 	public String toString()
 	{
-		return super.toString() + "(long)" + this.value;
+		return super.toString() + this.value;
 	}
 
 }

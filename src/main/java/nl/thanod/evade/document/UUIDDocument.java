@@ -53,7 +53,7 @@ public class UUIDDocument extends ValueDocument
 	@Override
 	public String toString()
 	{
-		return super.toString() + "(UUID)" + this.value;
+		return super.toString() + this.value;
 	}
 
 }
