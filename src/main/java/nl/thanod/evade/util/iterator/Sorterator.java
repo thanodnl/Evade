@@ -11,30 +11,29 @@ import java.util.*;
 public class Sorterator<E> implements Iterator<E>
 {
 
-	public final ArrayList<Peekerator<E>> source;
-	public final Comparator<Peekerator<E>> comp;
+	public final PriorityQueue<Peekerator<E>> source;
 
 	public Sorterator(Comparator<? super E> comp, Iterator<E>... source)
 	{
-		this.source = new ArrayList<Peekerator<E>>(source.length);
+		this.source = new PriorityQueue<Peekerator<E>>(source.length, new Peekerator.Sorter<E>(comp));
 		for (Iterator<E> it : source) {
 			if (it == null)
 				continue;
 			if (it.hasNext())
 				this.source.add(new Peekerator<E>(it));
 		}
-		this.comp = new Peekerator.Sorter<E>(comp);
 	}
 
 	public Sorterator(Iterable<? extends Iterable<E>> source, Comparator<E> comp)
 	{
-		this.source = new ArrayList<Peekerator<E>>();
+		this.source = new PriorityQueue<Peekerator<E>>(64, new Peekerator.Sorter<E>(comp));
 		for (Iterable<E> e : source) {
+			if (e == null)
+				continue;
 			Iterator<E> it = e.iterator();
 			if (it.hasNext())
 				this.source.add(new Peekerator<E>(it));
 		}
-		this.comp = new Peekerator.Sorter<E>(comp);
 	}
 
 	/*
@@ -56,10 +55,10 @@ public class Sorterator<E> implements Iterator<E>
 	{
 		if (this.source.size() <= 0)
 			throw new NoSuchElementException();
-		Collections.sort(this.source, this.comp);
-		E e = this.source.get(0).next();
-		if (!this.source.get(0).hasNext())
-			this.source.remove(0);
+		Peekerator<E> it = this.source.poll();
+		E e = it.next();
+		if (it.hasNext())
+			this.source.add(it);
 		return e;
 
 	}

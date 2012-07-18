@@ -4,8 +4,8 @@
 package nl.thanod.evade.collection.index;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import nl.thanod.evade.collection.index.Index.Entry;
 
@@ -16,11 +16,11 @@ public class CompoundIndex
 {
 	private static class CompoundIndexEntry extends Index.Entry
 	{
-		private List<Entry> found;
+		private PriorityQueue<Entry> found;
 		private Entry next = null;
 		private Entry prev = null;
 
-		protected CompoundIndexEntry(Index.Entry prev, List<Entry> found)
+		protected CompoundIndexEntry(Index.Entry prev, PriorityQueue<Entry> found)
 		{
 			super(take(found));
 			this.prev = prev;
@@ -52,13 +52,12 @@ public class CompoundIndex
 			return this.prev;
 		}
 
-		public static Index.Entry take(List<Index.Entry> found)
+		public static Index.Entry take(PriorityQueue<Index.Entry> found)
 		{
-			Collections.sort(found, Index.Entry.VALUE_COMPARE);
-			Index.Entry base = found.get(0);
+			Index.Entry base = found.poll();
 			Index.Entry next = base.next();
 			if (next != null)
-				found.set(0, base.next());
+				found.add(next);
 			else
 				found.remove(0);
 			return base;
@@ -81,7 +80,7 @@ public class CompoundIndex
 
 	public Index.Entry before(Comparable<? super Index.Entry> find)
 	{
-		final List<Index.Entry> found = new ArrayList<Index.Entry>(this.indices.size());
+		final PriorityQueue<Index.Entry> found = new PriorityQueue<Index.Entry>(this.indices.size(), Index.Entry.VALUE_COMPARE);
 		for (Index index : this.indices) {
 			Entry use = Search.before(index, find);
 			if (find.compareTo(use) < 0)
