@@ -85,7 +85,9 @@ public class KDEntry
 		for (Document.Entry e : table) {
 			ValueDocument[] documents = new ValueDocument[indexers.length];
 			for (int i = 0; i < indexers.length; i++) {
-				Document doc = Modifier.safeModify(indexers[i].modifier, e.doc.get(indexers[i].path));
+				Document doc = e.doc.get(indexers[i].path);
+				//TODO add modieifer
+				//				doc = Modifier.safeModify(indexers[i].modifier, doc);
 				if (doc instanceof ValueDocument)
 					documents[i] = (ValueDocument) doc;
 				else

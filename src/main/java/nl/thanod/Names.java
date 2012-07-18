@@ -27,7 +27,7 @@ public class Names
 		int c = 0;
 
 		Table table = Table.load(data, "names");
-		table.maintainIndex(new DocumentPath("name"), new LowerCase());
+//		table.maintainIndex(new DocumentPath("name"), new LowerCase());
 		
 		while ((line = r.readLine()) != null) {
 			table.update(UUID.randomUUID(), DocumentBuilder.start(System.currentTimeMillis()).put("name", line).make());

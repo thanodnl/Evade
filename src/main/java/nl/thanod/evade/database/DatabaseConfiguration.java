@@ -5,6 +5,8 @@ package nl.thanod.evade.database;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import nl.thanod.evade.collection.Table;
+import nl.thanod.evade.collection.index.SSIndex;
+import nl.thanod.evade.collection.index.TableIndex;
 import nl.thanod.evade.remote.Remote;
 import nl.thanod.evade.remote.RemoteBuilder;
 
@@ -53,6 +57,8 @@ public class DatabaseConfiguration
 				Table table = Table.load(collection, collection.getName());
 				db.addCollection(table.getName(), table);
 				log.info("Open collection {}", collection.getName());
+
+				loadIndex(db.getTableIndex(collection.getName()), collection, collection.getName());
 			}
 		} else {
 			log.info("No collections loaded");
@@ -60,6 +66,35 @@ public class DatabaseConfiguration
 		}
 
 		return db;
+	}
+
+	/**
+	 * @param tableIndex
+	 * @param collection
+	 * @param name
+	 */
+	private void loadIndex(TableIndex tableIndex, File dir, final String collectionName)
+	{
+		File[] files = dir.listFiles(new FilenameFilter() {
+
+			@Override
+			public boolean accept(File paramFile, String name)
+			{
+				return name.endsWith(".idx") && name.startsWith(collectionName);
+			}
+		});
+
+		if (files == null)
+			return;
+
+		for (File file : files) {
+			try {
+				SSIndex idx = new SSIndex(file);
+				tableIndex.add(idx);
+			} catch (IOException ball) {
+				log.error("Could not open index " + file, ball);
+			}
+		}
 	}
 
 	/**

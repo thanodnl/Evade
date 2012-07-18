@@ -22,6 +22,7 @@ public class Header
 		SORTED_INDEX(2),
 		UUID_INDEX(3),
 		BLOOM(4),
+		INDEX_DESC(5),
 		EOF(0xFF);
 
 		public final int code;
@@ -103,6 +104,16 @@ public class Header
 		if (e == null)
 			return null;
 		return e.map(raf.getChannel());
+	}
+
+	public int position(Type type)
+	{
+		Entry e = this.first;
+		while (e != null && e.type != type)
+			e = e.next;
+		if (e == null)
+			return -1;
+		return e.start;
 	}
 
 	public static Header read(DataInput in) throws IOException

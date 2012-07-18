@@ -85,6 +85,8 @@ class Evade():
 						yield response['data']
 					else:
 						raise Exception("No data in response")
+			except socket.error:
+				self.__connect()
 			except EvadeConnectionLost:
 				self.__connect()
 

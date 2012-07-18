@@ -7,16 +7,15 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
-import nl.thanod.evade.collection.index.IndexSerializer;
-import nl.thanod.evade.collection.index.MemIndex;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.document.Document.Entry;
-import nl.thanod.evade.document.DocumentPath;
-import nl.thanod.evade.document.modifiers.Modifier;
 import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
@@ -36,7 +35,6 @@ public class Table extends Collection
 	protected Set<SSTable> sstables;
 
 	protected volatile Memtable memtable;
-	protected volatile MemIndex memindex;
 
 	public final File directory;
 	public final String name;
@@ -110,16 +108,9 @@ public class Table extends Collection
 			compacter.run();
 	}
 
-	public void maintainIndex(DocumentPath path, Modifier modifier)
-	{
-		this.memindex = new MemIndex(path, modifier, 50000);
-	}
-
 	public void update(UUID id, Document doc)
 	{
 		getMemtable().update(id, doc);
-		if (this.memindex != null)
-			this.memindex.update(id, doc);
 		if (getMemtable().size() >= 50000) { // persist the table
 			persist();
 		}
@@ -150,18 +141,6 @@ public class Table extends Collection
 		// put a new memtable in place for further writes
 		this.memtable = new Memtable();
 		compact(old);
-
-		if (this.memindex != null) {
-			MemIndex index = this.memindex;
-			this.memindex = new MemIndex(index.path, index.modifier, 50000);
-			try {
-				System.out.println("Saving index");
-				IndexSerializer.compactIndices(directory, name, Collections.singletonList(index));
-				System.out.println("Saved");
-			} catch (IOException ball) {
-				ball.printStackTrace();
-			}
-		}
 	}
 
 	/*

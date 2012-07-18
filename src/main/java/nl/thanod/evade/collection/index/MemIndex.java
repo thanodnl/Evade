@@ -3,14 +3,11 @@
  */
 package nl.thanod.evade.collection.index;
 
-import java.util.Comparator;
 import java.util.UUID;
 
 import nl.thanod.evade.document.Document;
-import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.document.NullDocument;
 import nl.thanod.evade.document.ValueDocument;
-import nl.thanod.evade.document.modifiers.Modifier;
 
 /**
  * @author nilsdijk
@@ -50,16 +47,12 @@ public class MemIndex extends Index
 		}
 	}
 
-	public final DocumentPath path;
-	public final Modifier modifier;
-
 	private MemEntry[] data;
 	private int count;
 
-	public MemIndex(DocumentPath path, Modifier modifier, int size)
+	public MemIndex(IndexDescriptor desc, int size)
 	{
-		this.path = path;
-		this.modifier = modifier;
+		super(desc);
 
 		this.data = new MemEntry[size];
 		this.count = 0;
@@ -67,7 +60,7 @@ public class MemIndex extends Index
 
 	public void update(UUID id, Document doc)
 	{
-		doc = doc.get(this.path);
+		doc = doc.get(this.desc.path);
 
 		// the path this index is for is not in the update
 		if (doc == null)
@@ -75,12 +68,14 @@ public class MemIndex extends Index
 
 		ensureSpace();
 
-		doc = Modifier.safeModify(this.modifier, doc);
+		// TODO add modifier to the descriptor
+		//doc = Modifier.safeModify(this.modifier, doc);
 
 		final ValueDocument search;
 		if (doc instanceof ValueDocument)
 			search = (ValueDocument) doc;
 		else
+			// TODO prolly we need a noindex document here so we can actually index null documents effectivly
 			search = new NullDocument(doc.version);
 
 		int putIn = Search.before(this.data, 0, this.count, new Comparable<MemIndex.MemEntry>() {

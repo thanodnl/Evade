@@ -26,7 +26,7 @@ public class Github
 		File data = new File("data","github");
 		Table table = Table.load(data, "github");
 		
-		table.maintainIndex(new DocumentPath("actor_attributes", "login"), new LowerCase());
+//		table.maintainIndex(new DocumentPath("actor_attributes", "login"), new LowerCase());
 
 		File dir = new File(System.getProperty("user.home"), "githubdata");
 		File[] files = dir.listFiles(new FilenameFilter() {

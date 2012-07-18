@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.document.ValueDocument;
 import nl.thanod.evade.util.iterator.Generator;
@@ -20,7 +19,6 @@ public abstract class Index implements Iterable<Index.Entry>, Searchable<Index.E
 {
 	public static abstract class Entry
 	{
-
 		public static final Comparator<Index.Entry> VALUE_COMPARE = new Comparator<Index.Entry>() {
 			@Override
 			public int compare(Entry o1, Entry o2)
@@ -28,8 +26,15 @@ public abstract class Index implements Iterable<Index.Entry>, Searchable<Index.E
 				return ValueDocument.VALUE_COMPARE.compare(o1.match, o2.match);
 			}
 		};
+
 		public final UUID id;
 		public final ValueDocument match;
+
+		public Entry(Entry source)
+		{
+			this.id = source.id;
+			this.match = source.match;
+		}
 
 		public Entry(UUID id, ValueDocument match)
 		{
@@ -46,6 +51,13 @@ public abstract class Index implements Iterable<Index.Entry>, Searchable<Index.E
 		{
 			return this.id + ": " + this.match;
 		}
+	}
+	
+	public final IndexDescriptor desc;
+
+	public Index(IndexDescriptor desc)
+	{
+		this.desc = desc;
 	}
 
 	/*

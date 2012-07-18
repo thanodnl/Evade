@@ -13,6 +13,14 @@ public class StringDocument extends ValueDocument
 	public final String value;
 
 	/**
+	 * @param string
+	 */
+	public StringDocument(String value)
+	{
+		this(0, value);
+	}
+
+	/**
 	 * @param version
 	 * @param type
 	 */

@@ -1,4 +1,4 @@
-/**
+ /**
  * 
  */
 package nl.thanod.evade.database;
@@ -9,6 +9,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
+import nl.thanod.evade.collection.index.IndexDescriptor;
+import nl.thanod.evade.document.DocumentPath;
 import nl.thanod.evade.remote.Remote;
 
 import org.slf4j.Logger;
@@ -43,6 +45,8 @@ public class Main
 
 		// initialize the database
 		Database db = config.loadDatabase();
+		db.ensureIndex(null, "names", new IndexDescriptor(new DocumentPath("name")));
+		db.ensureIndex(null, "names", new IndexDescriptor(new DocumentPath("age")));
 
 		// initialize the remote interfaces
 		List<Remote> remotes = config.loadRemotes();

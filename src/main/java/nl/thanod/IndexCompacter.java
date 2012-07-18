@@ -36,17 +36,17 @@ public class IndexCompacter
 			indices.add(new SSIndex(idxFile));
 
 		// merge all indices
-		IndexSerializer.compactIndices(dir, name, indices);
-		
+		IndexSerializer.compactIndices(dir, name, indices.get(0).desc, indices);
+
 		// remove the old index files
-		for (File idxFile : indexFiles){
+		for (File idxFile : indexFiles) {
 			try {
 				idxFile.delete();
 				System.out.println("deleted: " + idxFile);
-			} catch(Exception ball){
+			} catch (Exception ball) {
 				ball.printStackTrace();
 				idxFile.deleteOnExit();
-			}	
+			}
 		}
 	}
 }

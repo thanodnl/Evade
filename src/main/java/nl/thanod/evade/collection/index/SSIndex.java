@@ -58,11 +58,23 @@ public class SSIndex extends Index
 	private final OffsetTable sortedIndex;
 	private final OffsetTable uuidIndex;
 
+	public final File file;
+
 	public SSIndex(File file) throws IOException
 	{
-		raf = new RandomAccessFile(file, "r");
+		this(file, new RandomAccessFile(file, "r"));
+	}
 
-		Header indexHeader = Header.read(raf);
+	private SSIndex(File file, RandomAccessFile raf) throws IOException
+	{
+		this(file, raf, Header.read(raf));
+	}
+
+	private SSIndex(File file, RandomAccessFile raf, Header indexHeader) throws IOException
+	{
+		super(loadDescriptor(raf, indexHeader));
+		this.file = file;
+		this.raf = raf;
 
 		datamap = indexHeader.map(raf, Header.Type.DATA);
 		sortedIndex = new OffsetTable(indexHeader.map(raf, Header.Type.SORTED_INDEX));
@@ -98,5 +110,18 @@ public class SSIndex extends Index
 	public int count()
 	{
 		return this.sortedIndex.count();
+	}
+
+	private static IndexDescriptor loadDescriptor(RandomAccessFile raf, Header header) throws IOException
+	{
+		long pos = header.position(Header.Type.INDEX_DESC);
+
+		if (pos < 0) // no descriptor available
+			return null;
+
+		// go to the place where the index descriptor is written
+		raf.seek(pos);
+
+		return IndexDescriptor.deserialize(DocumentSerializerVisitor.deserialize(raf));
 	}
 }

@@ -7,11 +7,9 @@ import java.io.File;
 import java.io.IOException;
 
 import nl.thanod.evade.collection.Table;
+import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.collection.index.IndexSerializer;
 import nl.thanod.evade.document.DocumentPath;
-import nl.thanod.evade.document.modifiers.LowerCase;
-import nl.thanod.evade.query.Constraint;
-import nl.thanod.evade.query.string.StartsWithConstraint;
 
 /**
  * @author nilsdijk
@@ -22,11 +20,11 @@ public class Index
 	{
 
 		String name = "github";
-		Table t = Table.load(new File("data",name), name);
+		File dir = new File("data", name);
+		Table t = Table.load(dir, name);
 
 		System.out.println(t.iterator().next());
-		Constraint c = new StartsWithConstraint(new LowerCase(), "zh1");
-		DocumentPath path = new DocumentPath("actor_attributes","login");
-		IndexSerializer.persistSortedIndex(t, path, c.modifier);
+		DocumentPath path = new DocumentPath("actor_attributes", "login");
+		IndexSerializer.persistSortedIndex(t, new IndexDescriptor(path), dir, name);
 	}
 }
