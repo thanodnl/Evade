@@ -21,6 +21,8 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import bsh.util.Sessiond;
+
 /**
  * @author nilsdijk
  */
@@ -152,7 +154,8 @@ public class JSONRemote extends Remote
 	public enum Mode
 	{
 		GET,
-		WHERE;
+		WHERE,
+		PUT;
 	}
 
 	private Database db;
@@ -196,7 +199,11 @@ public class JSONRemote extends Remote
 				}
 
 				String modename = jso.getString("mode");
-				Mode mode = Mode.valueOf(modename);
+				Mode mode = null;
+				try {
+					mode = Mode.valueOf(modename);
+				} catch (IllegalArgumentException ball) {
+				}
 
 				JSONObject response = new JSONObject();
 				response.put("session", sessionid);
@@ -233,6 +240,10 @@ public class JSONRemote extends Remote
 						if (!where(s, jso, sessionid))
 							continue;
 						break;
+					case PUT:
+						if (!put(s, jso, sessionid))
+							continue;
+						break;
 					default:
 						send(s, createError("Unknown mode " + modename, sessionid));
 						continue;
@@ -242,6 +253,77 @@ public class JSONRemote extends Remote
 			send(s, createError("Error while parsing json in request", -1));
 			log.error("Error while interperting the json data", ball);
 		}
+	}
+
+	/**
+	 * @param s
+	 * @param jso
+	 * @param sessionid
+	 * @return
+	 * @throws JSONException
+	 * @throws IOException
+	 */
+	private boolean put(Socket s, JSONObject jso, int sessionid) throws JSONException, IOException
+	{
+		String collectionName = jso.getString("collection");
+		String key = jso.getString("key");
+		UUID uuid;
+		try {
+			uuid = UUID.fromString(key);
+		} catch (IllegalArgumentException ball) {
+			send(s, createError("The key is not an UUID", sessionid));
+			return false;
+		}
+
+		Document doc = JSONToDocument(jso.get("data"), System.currentTimeMillis(), s, sessionid);
+		if (doc == null) {
+			return false;
+		}
+
+		Table table = this.db.getOrCreateCollection(collectionName);
+
+		table.update(uuid, doc);
+
+		JSONObject response = new JSONObject();
+		response.put("session", sessionid);
+		response.put("ok", true);
+		send(s, response);
+
+		return true;
+	}
+
+	/**
+	 * @param object
+	 * @param version
+	 * @return
+	 * @throws JSONException
+	 * @throws IOException
+	 */
+	private static Document JSONToDocument(Object object, long version, Socket s, int session) throws JSONException, IOException
+	{
+		if (object == null)
+			return new NullDocument(version);
+		if (object instanceof JSONObject) {
+			JSONObject jso = (JSONObject) object;
+			Iterator<String> keys = jso.keys();
+
+			Map<String, Document> map = new HashMap<String, Document>();
+			while (keys.hasNext()) {
+				String key = keys.next();
+				map.put(key, JSONToDocument(jso.get(key), version, s, session));
+			}
+
+			return new DictDocument(map, false);
+		}
+		if (object instanceof Number) {
+			double d = ((Number) object).doubleValue();
+			return new DoubleDocument(version, d);
+		}
+		if (object instanceof String) {
+			return new StringDocument(version, (String) object);
+		}
+		send(s, createError("Type " + object.getClass() + " not supported by evade", session));
+		return null;
 	}
 
 	private boolean where(Socket s, JSONObject jso, int sessionid) throws JSONException, IOException
@@ -306,7 +388,7 @@ public class JSONRemote extends Remote
 		return true;
 	}
 
-	public void send(Socket s, JSONObject data) throws IOException
+	public static void send(Socket s, JSONObject data) throws IOException
 	{
 		try {
 			log.debug("send {}", data);
@@ -323,7 +405,7 @@ public class JSONRemote extends Remote
 	 * @param i
 	 * @return
 	 */
-	private JSONObject createError(String reason, int packetid)
+	private static JSONObject createError(String reason, int packetid)
 	{
 		JSONObject error = new JSONObject();
 		try {
@@ -356,16 +438,29 @@ public class JSONRemote extends Remote
 		try {
 			while (true) {
 				log.info("Waiting for connection");
-				Socket s = ss.accept();
+				final Socket s = ss.accept();
 
+				new Thread(new Runnable() {
+
+					@Override
+					public void run()
+					{
+
+						try {
+							handleConnection(s);
+						} catch (IOException ball) {
+							ball.printStackTrace();
+						} finally {
+							// close connection affter beeing finished
+							try {
+								s.close();
+							} catch (IOException ball) {
+							}
+						}
+					}
+				}).start();
 				// connection is handled within this thread so only one connection is possible
-				handleConnection(s);
 
-				// close connection affter beeing finished
-				try {
-					s.close();
-				} catch (IOException ball) {
-				}
 			}
 		} catch (IOException ball) {
 			log.error("Error while accepting socket", ball);
@@ -384,20 +479,5 @@ public class JSONRemote extends Remote
 	public String toString()
 	{
 		return "JSONRemote(port:" + this.port + ")";
-	}
-
-	public static void main(String... args)
-	{
-		Database db = new Database();
-
-		// load github data into the database
-		String name = "github";
-		File data = new File("data", name);
-		db.addCollection("github", Table.load(data, name));
-
-		// make a JSON server and start it
-		JSONRemote remote = new JSONRemote(2225);
-		remote.setDB(db);
-		remote.run();
 	}
 }

@@ -1,11 +1,18 @@
 #
-#!/usr/env/env python
 
+#!/usr/env/env python
 import json
 import uuid
 import socket
 
 from pprint import pprint
+
+class EvadeException(Exception):
+	def __init__(self, value):
+		self.__value = value
+
+	def __str__(self):
+		return self.__value
 
 class EvadeConnectionLost(Exception):
 	def __init__(self, value="Connection has been lost"):
@@ -47,18 +54,18 @@ class Evade():
 	def read(self,collection, key):
 		session = self.__get_session()
 
-		req = {'session':session, 'mode':'GET', 'collection':collection, 'key':key}
+		req = {'session':session, 'mode':'GET', 'collection':collection, 'key':str(key)}
 		self.__server.send(json.dumps(req))
 		response = self.__read_response(session)
 
 		if 'error' in response:
 			# an error occured
-			raise Exception(response['error'])
+			raise EvadeException(response['error'])
 
 		if 'data' in response:
 			return response['data']
 
-		raise Exception("No data in response")
+		raise EvadeException("No data in response")
 
 	def where(self, collection, query, limit=None):
 		session = self.__get_session()
@@ -84,10 +91,34 @@ class Evade():
 					if 'data' in response:
 						yield response['data']
 					else:
-						raise Exception("No data in response")
+						raise EvadeException("No data in response")
 			except socket.error:
+				#error while sending
 				self.__connect()
 			except EvadeConnectionLost:
+				#error while receiving
+				self.__connect()
+
+	def put(self, collection, key, data):
+		session = self.__get_session()
+		req = {'session':session, 'mode':'PUT', 'collection':collection, 'key':str(key), 'data':data}
+
+		while True:
+			try:
+				self.__server.send(json.dumps(req))
+
+				response = self.__read_response(session)
+				if 'error' in response:
+					# an error occured
+					raise EvadeException(response['error'])
+				if 'ok' in response:
+					return True
+				return False
+			except socket.error:
+				#error while sending
+				self.__connect()
+			except EvadeConnectionLost:
+				#error while receiving
 				self.__connect()
 
 	def __read_response(self, session):
@@ -129,6 +160,9 @@ class EvadeCollection():
 	def __init__(self,evade,name):
 		self.__evade = evade
 		self.__name = name
+
+	def put(self, key, data):
+		return self.__evade.put(self.__name, key, data)
 
 	def where(self, field, value, limit=None):
 		return self.__evade.where(self.__name, [field, value], limit)

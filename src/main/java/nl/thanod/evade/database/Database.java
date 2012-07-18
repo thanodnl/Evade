@@ -3,14 +3,17 @@
  */
 package nl.thanod.evade.database;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 import nl.thanod.evade.collection.Table;
-import nl.thanod.evade.collection.index.*;
-import nl.thanod.evade.collection.index.IndexCreator.IndexCreatorListener;
+import nl.thanod.evade.collection.index.IndexCreator;
+import nl.thanod.evade.collection.index.IndexDescriptor;
+import nl.thanod.evade.collection.index.SSIndex;
+import nl.thanod.evade.collection.index.TableIndex;
 
 /**
  * @author nilsdijk
@@ -19,18 +22,29 @@ public class Database
 {
 	private final Map<String, Table> collections = new HashMap<String, Table>();
 	private final Map<String, TableIndex> indices = new HashMap<String, TableIndex>();
+	private final DatabaseConfiguration config;
 
-	public Database()
+	public Database(DatabaseConfiguration config)
 	{
+		this.config = config;
 	}
 
-	public void addCollection(String name, Table table)
+	public void addCollection(Table table)
 	{
-		this.collections.put(name, table);
+		this.collections.put(table.name, table);
 	}
 
 	public Table getCollection(String name)
 	{
+		return this.collections.get(name);
+	}
+
+	public Table getOrCreateCollection(String name)
+	{
+		if (!this.collections.containsKey(name)) {
+			Table table = Table.load(new File(config.datadir, name), name);
+			addCollection(table);
+		}
 		return this.collections.get(name);
 	}
 

@@ -41,7 +41,7 @@ public class DatabaseConfiguration
 	 */
 	public Database loadDatabase()
 	{
-		Database db = new Database();
+		Database db = new Database(this);
 
 		File[] collectionDirs = this.datadir.listFiles(new FileFilter() {
 
@@ -55,7 +55,7 @@ public class DatabaseConfiguration
 		if (collectionDirs != null) {
 			for (File collection : collectionDirs) {
 				Table table = Table.load(collection, collection.getName());
-				db.addCollection(table.getName(), table);
+				db.addCollection(table);
 				log.info("Open collection {}", collection.getName());
 
 				loadIndex(db.getTableIndex(collection.getName()), collection, collection.getName());
