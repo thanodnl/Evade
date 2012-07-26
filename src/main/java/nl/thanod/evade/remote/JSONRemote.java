@@ -225,6 +225,7 @@ public class JSONRemote extends Remote
 							Document doc = table.get(key);
 							// if you have a doc put it in the response
 							// otherwise the data is null
+							response.put("id", key.toString());
 							if (doc != null)
 								response.put("data", doc.accept(JSONVisitor.INSTANCE));
 							else
@@ -371,6 +372,7 @@ public class JSONRemote extends Remote
 				JSONObject response = new JSONObject();
 				response.put("session", sessionid);
 				response.put("data", e.doc.accept(JSONVisitor.INSTANCE));
+				response.put("id", e.id.toString());
 				send(s, response);
 				count++;
 				if (limit == count)

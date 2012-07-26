@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 
+import nl.thanod.evade.store.Header.Entry;
+
 /**
  * @author nilsdijk
  */
@@ -73,6 +75,11 @@ public class Header
 			}
 		}
 
+		@Override
+		public String toString()
+		{
+			return this.type.name() + ":" + this.start;
+		}
 	}
 
 	private Entry first;
@@ -127,6 +134,24 @@ public class Header
 		return ih;
 	}
 
+	public static Header readFromEnd(RandomAccessFile in) throws IOException
+	{
+		long pos = in.length();
+
+		Header ih = new Header();
+
+		in.seek(pos -= 4);
+		int size = in.readInt();
+
+		in.seek(pos -= 5 * size);
+		for (int i = 0; i < size; i++) {
+			Type t = Type.byCode(in.readByte() & 0xFF);
+			ih.put(t, in.readInt());
+		}
+
+		return ih;
+	}
+
 	public void write(DataOutput out) throws IOException
 	{
 		out.writeInt(count);
@@ -136,6 +161,34 @@ public class Header
 			out.writeInt(e.start);
 			e = e.next;
 		}
+	}
+
+	public void writeAtEnd(DataOutput out) throws IOException
+	{
+		Entry e = this.first;
+		for (int i = 0; i < count; i++) {
+			out.writeByte(e.type.code);
+			out.writeInt(e.start);
+			e = e.next;
+		}
+		out.writeInt(count);
+	}
+
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append("Header[");
+		Entry e = this.first;
+		while (e != null) {
+			sb.append(e);
+			sb.append(',');
+			e = e.next;
+		}
+		sb.setLength(sb.length() - 1); // remove last ','
+		sb.append(']');
+
+		return sb.toString();
 	}
 
 	public static void reserve(DataOutput out, int entryCount) throws IOException

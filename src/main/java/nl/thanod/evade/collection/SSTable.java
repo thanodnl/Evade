@@ -27,6 +27,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SSTable extends Collection implements Closeable
 {
+	public static final int FILE_HEADER = 0xEFADE000;
+	public static final int FILE_VERSION = 0;
+
 	private static final Logger log = LoggerFactory.getLogger(SSTable.class);
 
 	private static final int DEF_DATA_SIZE = 256 * 1024 * 1024;
@@ -48,7 +51,25 @@ public class SSTable extends Collection implements Closeable
 		this.file = file;
 
 		this.raf = new RandomAccessFile(file, "r");
-		Header header = Header.read(raf);
+
+		int fileheader = this.raf.readInt(); // read the header
+		Header header;
+		if ((fileheader & SSTable.FILE_HEADER) != SSTable.FILE_HEADER) {
+			log.warn("The file {} is probably not an evade file. It is loaded as if it were a development file", file);
+			raf.seek(0);
+			header = Header.read(raf);
+		} else {
+			int version = fileheader ^ SSTable.FILE_HEADER;
+			log.info("Opening {} as version {}", file, version);
+			switch (version) {
+				case 0:
+					header = Header.readFromEnd(raf);
+					break;
+				default:
+					log.error("Invalid version (version:{})", version);
+					throw new IOException("Invalid file version");
+			}
+		}
 
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
@@ -226,7 +247,7 @@ public class SSTable extends Collection implements Closeable
 			ByteArrayOutputStream bos = new ByteArrayOutputStream(4 * 1024);
 			DataOutputStream dos = new DataOutputStream(bos);
 
-			Header.reserve(raf, 4);
+			raf.writeInt(SSTable.FILE_HEADER | SSTable.FILE_VERSION);
 
 			Header header = new Header();
 
@@ -271,8 +292,7 @@ public class SSTable extends Collection implements Closeable
 			header.put(Header.Type.EOF, raf.getFilePointer());
 
 			// the offset where the index starts
-			raf.seek(0);
-			header.write(raf);
+			header.writeAtEnd(raf);
 
 			// close the file
 			raf.close();
