@@ -27,12 +27,6 @@ public class JSONBuilder extends RemoteBuilder
 	{
 		if (!this.name.equals(config.get("type")))
 			return null;
-
-		Object portObject = config.get("port");
-		if (portObject != null && portObject instanceof Number) {
-			return new JSONRemote(((Number) portObject).intValue());
-		}
-
-		return null;
+		return new JSONRemote(SocketProvider.open(config));
 	}
 }

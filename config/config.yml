@@ -1,5 +1,4 @@
 datadir: data/
 remote:
   - type: JSON
-    port: 2225
     

@@ -21,8 +21,6 @@ import org.json.JSONTokener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import bsh.util.Sessiond;
-
 /**
  * @author nilsdijk
  */
@@ -159,11 +157,11 @@ public class JSONRemote extends Remote
 	}
 
 	private Database db;
-	private final int port;
+	private final ServerSocket socket;
 
-	public JSONRemote(int port)
+	public JSONRemote(ServerSocket socket)
 	{
-		this.port = port;
+		this.socket = socket;
 	}
 
 	@Override
@@ -427,20 +425,15 @@ public class JSONRemote extends Remote
 	@Override
 	public void run()
 	{
-		ServerSocket ss = null;
-
-		try {
-			ss = new ServerSocket(this.port);
-		} catch (IOException ball) {
-			// TODO Auto-generated catch block
-			log.error("Unable to start the server", ball);
+		if (this.socket == null) {
+			log.error("Could not start JSON server because there is now socket to use");
 			return;
 		}
 
 		try {
-			while (true) {
+			while (!this.socket.isClosed()) {
 				log.info("Waiting for connection");
-				final Socket s = ss.accept();
+				final Socket s = this.socket.accept();
 
 				new Thread(new Runnable() {
 
@@ -464,12 +457,13 @@ public class JSONRemote extends Remote
 				// connection is handled within this thread so only one connection is possible
 
 			}
+			log.info("Socket {} closed", this.socket);
 		} catch (IOException ball) {
 			log.error("Error while accepting socket", ball);
 		} finally {
-			if (ss != null) {
+			if (this.socket != null) {
 				try {
-					ss.close();
+					this.socket.close();
 				} catch (IOException ball) {
 					log.error("could not close socket", ball);
 				}
@@ -480,6 +474,6 @@ public class JSONRemote extends Remote
 	@Override
 	public String toString()
 	{
-		return "JSONRemote(port:" + this.port + ")";
+		return "JSONRemote(socket:" + this.socket + ")";
 	}
 }
