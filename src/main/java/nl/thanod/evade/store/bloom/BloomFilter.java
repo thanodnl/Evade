@@ -28,7 +28,13 @@ public class BloomFilter
 		this.hashes = hashes;
 		int bytes = bits / 8 + (bits % 8 > 0 ? 1 : 0);
 		this.bits = bits;
-		this.backed = ByteBuffer.allocate(bytes);
+
+		// big bloom filters should not reside in heap
+		// that could trigger OOM exceptions
+		if (bytes <= 1024 * 1024)  // current threshold is arbitrary set at 1MB
+			this.backed = ByteBuffer.allocate(bytes);
+		else
+			this.backed = ByteBuffer.allocateDirect(bytes);
 	}
 
 	public void put(int[] hashes)

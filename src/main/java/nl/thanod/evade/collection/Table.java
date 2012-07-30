@@ -7,10 +7,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
@@ -19,6 +16,8 @@ import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Documenter;
+import nl.thanod.evade.util.iterator.Generator;
+import nl.thanod.evade.util.iterator.Sorterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,8 +205,35 @@ public class Table extends Collection
 	@Override
 	public Iterable<UUID> uuids()
 	{
-		// not yet implemented
-		throw new UnsupportedOperationException();
+		List<Iterable<UUID>> ids = new ArrayList<Iterable<UUID>>(Table.this.sstables.size());
+		for (SSTable sstable : this.sstables)
+			ids.add(sstable.uuids());
+		//TODO: add memtable to the iterables
+		// this memtable-iterable should be automaticly updating
+		// when a write to it occures to give accurate counts
+
+		final Sorterator<UUID> sorted = new Sorterator<UUID>(ids, new Comparator<UUID>() {
+			@Override
+			public int compare(UUID o1, UUID o2)
+			{
+				return o1.compareTo(o2);
+			}
+		});
+		return new Generator<UUID>() {
+			UUID last = null;
+
+			@Override
+			protected UUID generate() throws NoSuchElementException
+			{
+				while (sorted.hasNext()) {
+					UUID current = sorted.next();
+					if (current.equals(last))
+						continue;
+					return this.last = current;
+				}
+				throw new NoSuchElementException();
+			}
+		};
 	}
 
 	public static Table load(final File dir, final String name)
