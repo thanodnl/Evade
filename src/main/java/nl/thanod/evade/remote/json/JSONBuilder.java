@@ -1,11 +1,14 @@
 /**
  * 
  */
-package nl.thanod.evade.remote;
+package nl.thanod.evade.remote.json;
 
 import java.util.Map;
 
 import nl.thanod.annotations.spi.ProviderFor;
+import nl.thanod.evade.remote.Remote;
+import nl.thanod.evade.remote.RemoteBuilder;
+import nl.thanod.evade.remote.SocketProvider;
 
 /**
  * @author nilsdijk

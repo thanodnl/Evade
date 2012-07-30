@@ -1,18 +1,20 @@
 /**
  * 
  */
-package nl.thanod.evade.remote;
+package nl.thanod.evade.remote.json;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.document.*;
-import nl.thanod.evade.document.visitor.DocumentVisitor;
+import nl.thanod.evade.remote.Remote;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,127 +29,6 @@ import org.slf4j.LoggerFactory;
 public class JSONRemote extends Remote
 {
 	private static Logger log = LoggerFactory.getLogger(JSONRemote.class);
-
-	public static class JSONVisitor extends DocumentVisitor<Object, Void>
-	{
-
-		public static final JSONVisitor INSTANCE = new JSONVisitor();
-
-		private JSONVisitor()
-		{
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.StringDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(StringDocument doc, Void data)
-		{
-			return doc.value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.NullDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(NullDocument doc, Void data)
-		{
-			return null;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.DictDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(DictDocument doc, Void data)
-		{
-			Map<String, Object> content = new TreeMap<String, Object>();
-			for (Entry<String, Document> e : doc.entrySet())
-				content.put(e.getKey(), e.getValue().accept(this));
-			return new JSONObject(content);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.BooleanDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(BooleanDocument doc, Void data)
-		{
-			return doc.value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.IntegerDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(IntegerDocument doc, Void data)
-		{
-			return doc.value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.LongDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(LongDocument doc, Void data)
-		{
-			return doc.value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.UUIDDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(UUIDDocument doc, Void data)
-		{
-			return doc.value.toString();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.DoubleDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(DoubleDocument doc, Void data)
-		{
-			return doc.value;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see
-		 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
-		 * evade.document.FloatDocument, java.lang.Object)
-		 */
-		@Override
-		public Object visit(FloatDocument doc, Void data)
-		{
-			return doc.value;
-		}
-	}
 
 	public enum Mode
 	{
@@ -225,7 +106,7 @@ public class JSONRemote extends Remote
 							// otherwise the data is null
 							response.put("id", key.toString());
 							if (doc != null)
-								response.put("data", doc.accept(JSONVisitor.INSTANCE));
+								response.put("data", doc.accept(JSONifier.INSTANCE));
 							else
 								response.put("data", (Object) null);
 						} catch (IllegalArgumentException ball) {
@@ -369,7 +250,7 @@ public class JSONRemote extends Remote
 			if (sd.value.toLowerCase().startsWith(content)) {
 				JSONObject response = new JSONObject();
 				response.put("session", sessionid);
-				response.put("data", e.doc.accept(JSONVisitor.INSTANCE));
+				response.put("data", e.doc.accept(JSONifier.INSTANCE));
 				response.put("id", e.id.toString());
 				send(s, response);
 				count++;
