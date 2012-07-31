@@ -11,7 +11,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+import net.thepinguin.evade.exceptions.NoSuchIndexException;
+import net.thepinguin.evade.query.Query;
 import nl.thanod.evade.collection.Table;
+import nl.thanod.evade.collection.index.Index;
+import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.remote.Remote;
@@ -89,6 +93,10 @@ public class JSONRemote extends Remote
 
 				String collection;
 				Table table;
+				
+				
+				
+				
 				switch (mode) {
 					case GET:
 						// read stuff from database
@@ -209,11 +217,17 @@ public class JSONRemote extends Remote
 	private boolean where(Socket s, JSONObject jso, int sessionid) throws JSONException, IOException
 	{
 		String collection = jso.getString("collection");
-		Table table = db.getCollection(collection);
-		if (table == null) {
-			send(s, createError("No such collection (" + collection + ")", sessionid));
-			return false;
-		}
+		
+
+		
+
+//		Table table = db.getCollection(collection);
+//		if (table == null) {
+//			send(s, createError("No such collection (" + collection + ")", sessionid));
+//			return false;
+//		}
+		
+		
 		JSONArray query = null;
 		try {
 			query = jso.getJSONArray("query");
@@ -230,33 +244,34 @@ public class JSONRemote extends Remote
 		String field = query.getString(0);
 		String content = query.getString(1);
 		DocumentPath path = new DocumentPath(field);
-
-		int limit = 0;
-		if (jso.has("limit"))
-			limit = jso.getInt("limit");
-		int count = 0;
-
-		for (Document.Entry e : table)
-		{
-			Document d = e.doc.get(path);
-			if (d == null)
-				continue;
-			if (!(d instanceof StringDocument))
-				continue;
-
-			StringDocument sd = (StringDocument) d;
-			if (sd.value.toLowerCase().startsWith(content)) {
-				JSONObject response = new JSONObject();
-				response.put("session", sessionid);
-				response.put("data", e.doc.accept(JSONifier.INSTANCE));
-				response.put("id", e.id.toString());
-				send(s, response);
-				count++;
-				if (limit == count)
-					break;
-			}
-
+		
+		
+		Query q = new Query(collection, path, content);
+		Iterable<Index.Entry> solve;
+		try {
+			solve = q.solve(db);
+		} catch (NoSuchIndexException e1) {
+			send(s, createError("No valid index for: " + q.path, sessionid));
+			return false;
 		}
+		
+		int count = 0;
+		for (Index.Entry e : solve){
+			JSONObject response = new JSONObject();
+			response.put("session", sessionid);
+			Document doc = db.getCollection(q.collection).get(e.id);
+			response.put("data", doc.accept(JSONifier.INSTANCE));
+			response.put("id", e.id.toString());
+			send(s, response);
+			count++;
+		}
+		
+
+//		int limit = 0;
+//		if (jso.has("limit"))
+//			limit = jso.getInt("limit");
+
+
 
 		JSONObject response = new JSONObject();
 		response.put("session", sessionid);
