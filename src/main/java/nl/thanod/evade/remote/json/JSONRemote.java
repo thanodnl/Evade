@@ -236,10 +236,8 @@ public class JSONRemote extends Remote
 			limit = jso.getInt("limit");
 		int count = 0;
 
-		Iterator<Document.Entry> it = table.iterator();
-		while (it.hasNext()) {
-			Document.Entry e = it.next();
-
+		for (Document.Entry e : table)
+		{
 			Document d = e.doc.get(path);
 			if (d == null)
 				continue;
