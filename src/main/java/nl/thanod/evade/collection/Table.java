@@ -110,7 +110,7 @@ public class Table extends Collection
 	public void update(UUID id, Document doc)
 	{
 		getMemtable().update(id, doc);
-		if (getMemtable().size() >= 50000) { // persist the table
+		if (getMemtable().size() >= 10000) { // persist the table
 			persist();
 		}
 	}
@@ -125,7 +125,7 @@ public class Table extends Collection
 			for (File sstable : SSTable.save(this.directory, this.name, old)) {
 				// and add all created tables for resolving
 				this.addSSTable(new SSTable(sstable));
-				System.out.println(sstable);
+				log.info("Saved memtable to sstable: {}",sstable);
 			}
 		} catch (FileNotFoundException ball) {
 			ball.printStackTrace();

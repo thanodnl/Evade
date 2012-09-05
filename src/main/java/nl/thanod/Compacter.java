@@ -20,6 +20,6 @@ public class Compacter
 		conf.datadir = new File("data");
 		
 		Database db = conf.loadDatabase();
-		db.getCollection("names").majorCompact(null);
+		db.getCollection("github").majorCompact(null);
 	}
 }

@@ -137,6 +137,28 @@ class Evade():
         #error while receiving
         self.__connect()
 
+  def persist(self, collection):
+    session = self.__get_session()
+    req = {'session':session, 'mode':'PERSIST', 'collection':collection}
+
+    while True:
+      try:
+        self.__server.send(json.dumps(req))
+
+        response = self.__read_response(session)
+        if 'error' in response:
+          # an error occured
+          raise EvadeException(response['error'])
+        if 'ok' in response:
+          return True
+        return False
+      except socket.error:
+        #error while sending
+        self.__connect()
+      except EvadeConnectionLost:
+        #error while receiving
+        self.__connect()
+
   def __read_response(self, session):
     if session in self.__store:
       if len(self.__store[session]) > 0:
@@ -182,6 +204,9 @@ class EvadeCollection():
 
   def where(self, field, value, limit=None):
     return self.__evade.where(self.__name, [field, value], limit)
+
+  def persist(self):
+      return self.__evade.persist(self.__name);
 
   def __getitem__(self, key):
     return self.__evade.read(self.__name, key)

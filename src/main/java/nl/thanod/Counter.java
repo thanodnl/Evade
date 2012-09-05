@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
+import nl.thanod.evade.collection.ApproxCounter;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.database.DatabaseConfiguration;
 import nl.thanod.evade.store.bloom.Bloom;
@@ -40,23 +41,26 @@ public class Counter
 		}));
 		sw1.run();
 		System.out.println("counting " + sw1.delegate.get() + " entries took " + sw1);
+		
+//		ApproxCounter counter = new ApproxCounter(db.getCollection("github"));
+//		System.out.println(counter.get() + " items");
 
-		final BloomFilter filter = BloomFilter.optimal(sw1.delegate.get(), 5);
 
-		Stopwatch<Runnable> sw2 = new Stopwatch<Runnable>(new Runnable() {
-			@Override
-			public void run()
-			{
-				for (UUID uuid : db.getCollection("github").uuids()) {
-					Bloom<UUID> bloom = new Bloom<UUID>(uuid, BloomHasher.UUID);
-					bloom.putIn(filter);
-				}
-			}
-		});
-
-		for (int i = 0; i < 1000; i++) {
-			sw2.run();
-			System.out.println("building bloom filter took " + sw2);
-		}
+//		final BloomFilter filter = BloomFilter.optimal(sw1.delegate.get(), 5);
+		//		Stopwatch<Runnable> sw2 = new Stopwatch<Runnable>(new Runnable() {
+		//			@Override
+		//			public void run()
+		//			{
+		//				for (UUID uuid : db.getCollection("github").uuids()) {
+		//					Bloom<UUID> bloom = new Bloom<UUID>(uuid, BloomHasher.UUID);
+		//					bloom.putIn(filter);
+		//				}
+		//			}
+		//		});
+		//
+		//		for (int i = 0; i < 1000; i++) {
+		//			sw2.run();
+		//			System.out.println("building bloom filter took " + sw2);
+		//		}
 	}
 }

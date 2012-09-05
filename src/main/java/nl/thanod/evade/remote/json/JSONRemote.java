@@ -38,7 +38,8 @@ public class JSONRemote extends Remote
 	{
 		GET,
 		WHERE,
-		PUT;
+		PUT,
+		PERSIST;
 	}
 
 	private Database db;
@@ -98,6 +99,17 @@ public class JSONRemote extends Remote
 				
 				
 				switch (mode) {
+					case PERSIST:
+						collection = jso.getString("collection");
+						table = db.getCollection(collection);
+						if (table == null) {
+							send(s, createError("No such collection (" + collection + ")", sessionid));
+							continue;
+						}
+						table.persist();
+						response.put("ok", true);
+						send(s, response);
+						break;
 					case GET:
 						// read stuff from database
 						collection = jso.getString("collection");
@@ -163,8 +175,9 @@ public class JSONRemote extends Remote
 			return false;
 		}
 
-		Document doc = JSONToDocument(jso.get("data"), System.currentTimeMillis(), s, sessionid);
+		Document doc = JSONToDocument(jso.get("data"), System.currentTimeMillis());
 		if (doc == null) {
+			send(s, createError("Error while creating document", sessionid));
 			return false;
 		}
 
@@ -187,7 +200,7 @@ public class JSONRemote extends Remote
 	 * @throws JSONException
 	 * @throws IOException
 	 */
-	private static Document JSONToDocument(Object object, long version, Socket s, int session) throws JSONException, IOException
+	private static Document JSONToDocument(Object object, long version) throws JSONException, IOException
 	{
 		if (object == null)
 			return new NullDocument(version);
@@ -198,10 +211,16 @@ public class JSONRemote extends Remote
 			Map<String, Document> map = new HashMap<String, Document>();
 			while (keys.hasNext()) {
 				String key = keys.next();
-				map.put(key, JSONToDocument(jso.get(key), version, s, session));
+				Document value = JSONToDocument(jso.get(key), version);
+				if (value != null)
+					map.put(key, value);
 			}
 
 			return new DictDocument(map, false);
+		}
+		if (object instanceof Boolean) {
+			boolean b = (Boolean) object;
+			return new BooleanDocument(version, b);
 		}
 		if (object instanceof Number) {
 			double d = ((Number) object).doubleValue();
@@ -210,7 +229,8 @@ public class JSONRemote extends Remote
 		if (object instanceof String) {
 			return new StringDocument(version, (String) object);
 		}
-		send(s, createError("Type " + object.getClass() + " not supported by evade", session));
+		log.warn("Type {} is not supported by JSONToDocument", object.getClass());
+		//send(s, createError("Type " + object.getClass() + " not supported by evade", session));
 		return null;
 	}
 

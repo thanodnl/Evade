@@ -65,7 +65,7 @@ public class TableCompacter implements Runnable
 	{
 		List<File> files = Collections.emptyList();
 		try {
-			files = SSTable.save(this.table.directory, this.table.name, new Documenter(this.tables));
+			files = SSTable.save(this.table.directory, this.table.name, new Documenter(this.tables), 1024 * 1024 * 1024);
 		} catch (FileNotFoundException ball) {
 			log.error("Problem while compacting", ball);
 			log.error("Because of the error it is asumed that the compaction failed! Files that are created will stay on the system and loaded at a reboot of the database please perform a compaction after rebooting to clean up those files");

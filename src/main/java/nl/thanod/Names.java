@@ -8,8 +8,6 @@ import java.util.UUID;
 
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.document.DocumentBuilder;
-import nl.thanod.evade.document.DocumentPath;
-import nl.thanod.evade.document.modifiers.LowerCase;
 
 /**
  * @author nilsdijk

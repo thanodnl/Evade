@@ -27,10 +27,10 @@ public class Bloom<Data>
 		return filter.contains(this.hashes);
 	}
 
-	public void putIn(BloomFilter filter)
+	public boolean putIn(BloomFilter filter)
 	{
 		ensureHashes(filter.hashCount());
-		filter.put(this.hashes);
+		return filter.put(this.hashes);
 	}
 
 	/**

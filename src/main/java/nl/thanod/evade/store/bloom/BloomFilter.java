@@ -31,21 +31,23 @@ public class BloomFilter
 
 		// big bloom filters should not reside in heap
 		// that could trigger OOM exceptions
-		if (bytes <= 1024 * 1024)  // current threshold is arbitrary set at 1MB
+		if (bytes <= 1024 * 1024) // current threshold is arbitrary set at 1MB
 			this.backed = ByteBuffer.allocate(bytes);
 		else
 			this.backed = ByteBuffer.allocateDirect(bytes);
 	}
 
-	public void put(int[] hashes)
+	public synchronized boolean put(int[] hashes)
 	{
+		boolean set = false;
 		if (this.hashes > hashes.length)
 			throw new RuntimeException("Not enough hashes supplied for this bloomfilter");
 		for (int i = 0; i < this.hashes; i++)
-			put(hashes[i]);
+			set |= put(hashes[i]);
+		return set;
 	}
 
-	private void put(int hash)
+	private boolean put(int hash)
 	{
 		long bit = hash & 0xFFFFFFFFL;
 		bit %= this.bits;
@@ -53,8 +55,12 @@ public class BloomFilter
 		bit %= 8;
 
 		byte b = this.backed.get(index);
-		b |= 1 << bit;
+		bit = 1 << bit;
+		if ((b & bit) == 0)
+			return false;
+		b |= bit;
 		this.backed.put(index, b);
+		return true;
 	}
 
 	public boolean contains(int[] hashes)
