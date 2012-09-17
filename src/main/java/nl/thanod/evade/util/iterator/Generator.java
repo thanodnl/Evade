@@ -3,6 +3,8 @@
  */
 package nl.thanod.evade.util.iterator;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -39,6 +41,13 @@ public abstract class Generator<E> implements Iterator<E>, Iterable<E>
 			this.next = true;
 			return true;
 		} catch (NoSuchElementException ball) {
+			if (this instanceof Closeable){
+				try {
+					((Closeable)this).close();
+				} catch (IOException ball1) {
+					// error while closing iterator
+				}
+			}
 			return false;
 		}
 	}

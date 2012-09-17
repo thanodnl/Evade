@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class SSTable extends Collection implements Closeable
 {
 	public static final int FILE_HEADER = 0xEFADE000;
-	public static final int FILE_VERSION = 0;
+	public static final int FILE_VERSION = 1;
 
 	private static final Logger log = LoggerFactory.getLogger(SSTable.class);
 
@@ -45,6 +45,8 @@ public class SSTable extends Collection implements Closeable
 	private final UUID max;
 	private final UUID min;
 	private final RandomAccessFile raf;
+	private final Header header;
+	private final int version;
 
 	public SSTable(File file) throws IOException
 	{
@@ -58,18 +60,21 @@ public class SSTable extends Collection implements Closeable
 			log.warn("The file {} is probably not an evade file. It is loaded as if it were a development file", file);
 			raf.seek(0);
 			header = Header.read(raf);
+			this.version = 0;
 		} else {
-			int version = fileheader ^ SSTable.FILE_HEADER;
-			log.info("Opening {} as version {}", file, version);
-			switch (version) {
+			this.version = fileheader ^ SSTable.FILE_HEADER;
+			log.info("Opening {} as version {}", file, this.version);
+			switch (this.version) {
 				case 0:
+				case 1:
 					header = Header.readFromEnd(raf);
 					break;
 				default:
-					log.error("Invalid version (version:{})", version);
+					log.error("Invalid version (version:{})", this.version);
 					throw new IOException("Invalid file version");
 			}
 		}
+		this.header = header;
 
 		// the index is located at start index until the end of the file minus the 4 bytes
 		// indicating the start of the index
@@ -149,7 +154,16 @@ public class SSTable extends Collection implements Closeable
 
 	public Document get(UUIDPositionIndex.Pointer pointer)
 	{
-		return DocumentSerializerVisitor.deserialize(new ByteBufferDataInput((ByteBuffer) this.datamap.duplicate().position(pointer.pos)));
+		DataInput di = new ByteBufferDataInput((ByteBuffer) this.datamap.duplicate().position(pointer.pos));
+		if (this.version == 1) {
+			try {
+				di.readLong();
+				di.readLong();
+			} catch (IOException ball) {
+				ball.printStackTrace();
+			}
+		}
+		return DocumentSerializerVisitor.deserialize(di);
 	}
 
 	@Override
@@ -168,6 +182,15 @@ public class SSTable extends Collection implements Closeable
 	@Override
 	public Iterator<Entry> iterator()
 	{
+		if (this.version == 1) {
+			try {
+				return new SSTableIterator(this.file, this.header.position(Header.Type.DATA), this.header.length(Header.Type.DATA));
+			} catch (IOException ball) {
+				ball.printStackTrace();
+				// fall-throug to old implementation
+			}
+		}
+
 		final ByteBuffer buffer = this.datamap.duplicate();
 		buffer.position(0);
 		final DataInput input = new ByteBufferDataInput(buffer);
@@ -258,6 +281,10 @@ public class SSTable extends Collection implements Closeable
 			while (it.hasNext() && raf.getFilePointer() < maxdatasize) {
 				Document.Entry e = it.next();
 				index.put(e.id, (int) (raf.getFilePointer() - offset));
+
+				// write the document id for linear iterating
+				dos.writeLong(e.id.getMostSignificantBits());
+				dos.writeLong(e.id.getLeastSignificantBits());
 
 				// serialize document
 				e.doc.accept(DocumentSerializerVisitor.VISITOR, dos);

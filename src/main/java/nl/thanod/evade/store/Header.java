@@ -123,6 +123,18 @@ public class Header
 		return e.start;
 	}
 
+	public int length(Type type)
+	{
+		Entry e = this.first;
+		while (e != null && e.type != type)
+			e = e.next;
+		if (e == null)
+			return -1;
+		if (e.next == null)
+			return 0;
+		return e.next.start - e.start;
+	}
+
 	public static Header read(DataInput in) throws IOException
 	{
 		Header ih = new Header();
