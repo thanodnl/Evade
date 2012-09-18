@@ -15,7 +15,6 @@ import net.thepinguin.evade.exceptions.NoSuchIndexException;
 import net.thepinguin.evade.query.Query;
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.collection.index.Index;
-import nl.thanod.evade.collection.index.Index.Entry;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.remote.Remote;

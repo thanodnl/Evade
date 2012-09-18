@@ -114,14 +114,12 @@ public class SSIndex extends Index
 
 	private static IndexDescriptor loadDescriptor(RandomAccessFile raf, Header header) throws IOException
 	{
-		long pos = header.position(Header.Type.INDEX_DESC);
-
-		if (pos < 0) // no descriptor available
+		Header.Entry desc = header.get(Header.Type.INDEX_DESC);
+		if (desc == null) // no descriptor available
 			return null;
-
+		
 		// go to the place where the index descriptor is written
-		raf.seek(pos);
-
+		raf.seek(desc.start);
 		return IndexDescriptor.deserialize(DocumentSerializerVisitor.deserialize(raf));
 	}
 }

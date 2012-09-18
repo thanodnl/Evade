@@ -10,8 +10,6 @@ import java.nio.channels.FileChannel.MapMode;
 import java.util.EnumSet;
 import java.util.Set;
 
-import nl.thanod.evade.store.Header.Type;
-
 /**
  * @author nilsdijk
  */
@@ -139,32 +137,10 @@ public class Header
 
 	public ByteBuffer map(RandomAccessFile raf, Type type)
 	{
-		Entry e = this.first;
-		while (e != null && e.type != type)
-			e = e.next;
+		Entry e = get(type);
 		if (e == null)
 			return null;
 		return e.map(raf.getChannel());
-	}
-
-	public long position(Type type)
-	{
-		Entry e = get(type);
-		if (e == null)
-			return -1;
-		return e.start;
-	}
-
-	public long length(Type type)
-	{
-		Entry e = this.first;
-		while (e != null && e.type != type)
-			e = e.next;
-		if (e == null)
-			return -1;
-		if (e.next == null)
-			return 0;
-		return e.next.start - e.start;
 	}
 
 	public static Header read(DataInput in) throws IOException

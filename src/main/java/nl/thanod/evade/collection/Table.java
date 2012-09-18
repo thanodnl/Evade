@@ -173,13 +173,9 @@ public class Table extends Collection
 	@Override
 	public Document get(UUID id)
 	{
-		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		Document doc = null;
-		for (SSTable ss : this.sstables) {
-			//			if (ss.earlySkip(bloom))
-			//				continue;
+		for (SSTable ss : this.sstables)
 			doc = Document.merge(doc, ss.get(id));
-		}
 		doc = Document.merge(doc, getMemtable().get(id));
 		return doc;
 	}

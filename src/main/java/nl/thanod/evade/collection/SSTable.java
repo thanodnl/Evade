@@ -162,6 +162,8 @@ public class SSTable extends Collection implements Closeable
 	@Override
 	public Document get(UUID id)
 	{
+		if (this.min.compareTo(id) > 0 || this.max.compareTo(id) < 0)
+			return null;
 		Pointer p = this.index.before(id);
 		if (!p.id.equals(id))
 			return null;
@@ -296,7 +298,7 @@ public class SSTable extends Collection implements Closeable
 				f = new File(datadir, name + idx++ + ".sstable");
 			} while (f.exists());
 
-			Map<UUID, Integer> index = new TreeMap<UUID, Integer>();
+			SortedMap<UUID, Integer> index = new TreeMap<UUID, Integer>();
 
 			RandomAccessFile raf = new RandomAccessFile(f, "rw");
 
@@ -359,9 +361,10 @@ public class SSTable extends Collection implements Closeable
 			raf.write(bos.toByteArray());
 			bos.reset();
 
-			header.put(Header.Type.BLOOM, raf.getFilePointer());
-			if (bloom != null)
+			if (bloom != null){
+				header.put(Header.Type.BLOOM, raf.getFilePointer());
 				bloom.write(raf);
+			}
 			header.put(Header.Type.EOF, raf.getFilePointer());
 
 			// the offset where the index starts
