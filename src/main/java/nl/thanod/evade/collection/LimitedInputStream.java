@@ -13,9 +13,9 @@ public class LimitedInputStream extends InputStream
 {
 
 	private final InputStream in;
-	private int limit;
+	private long limit;
 
-	public LimitedInputStream(InputStream in, int limit)
+	public LimitedInputStream(InputStream in, long limit)
 	{
 		this.in = in;
 		this.limit = limit;
@@ -38,7 +38,7 @@ public class LimitedInputStream extends InputStream
 	{
 		if (this.limit <= 0)
 			return -1;
-		len = Math.min(len, this.limit);
+		len = (int)Math.min(len, this.limit);
 		len = this.in.read(buffer, off, len);
 		this.limit -= len;
 		return len;
@@ -53,6 +53,6 @@ public class LimitedInputStream extends InputStream
 	@Override
 	public int available()
 	{
-		return Math.max(this.limit, 0);
+		return (int)Math.max(this.limit, 0);
 	}
 }

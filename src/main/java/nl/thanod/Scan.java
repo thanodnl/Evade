@@ -25,7 +25,7 @@ public class Scan
 		conf.datadir = new File("data");
 
 		Database db = conf.loadDatabase();
-		Table t = db.getCollection("names");
+		Table t = db.getCollection("github");
 
 		long start = System.nanoTime();
 		int c = 0;

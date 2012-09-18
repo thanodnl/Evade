@@ -33,7 +33,7 @@ public class KDSerializer
 		}
 
 		Header.reserve(raf, 2);
-		Header header = new Header();
+		Header header = new Header(-1);
 
 		this.dataoffset = (int) raf.getFilePointer();
 		header.put(Type.DATA, this.dataoffset);

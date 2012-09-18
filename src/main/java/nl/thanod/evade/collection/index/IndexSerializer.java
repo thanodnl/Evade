@@ -41,7 +41,7 @@ public class IndexSerializer
 		} while (file.exists());
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
-		Header indexHeader = new Header();
+		Header indexHeader = new Header(-1);
 
 		// reserve some room for the index table
 		Header.reserve(raf, 5);
@@ -147,7 +147,7 @@ public class IndexSerializer
 	{
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
-		Header indexHeader = new Header();
+		Header indexHeader = new Header(-1);
 
 		// reserve some room for the index table
 		Header.reserve(raf, 5);
@@ -298,7 +298,7 @@ public class IndexSerializer
 		// open the file for writing
 		RandomAccessFile raf = new RandomAccessFile(file, "rw");
 
-		Header indexHeader = new Header();
+		Header indexHeader = new Header(-1);
 
 		// reserve some room for the index table
 		Header.reserve(raf, 4);

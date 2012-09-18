@@ -17,10 +17,14 @@ import nl.thanod.evade.store.bloom.Bloom;
 import nl.thanod.evade.store.bloom.BloomFilter;
 import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.ByteBufferDataInput;
+import nl.thanod.evade.util.ByteBufferInputStream;
 import nl.thanod.evade.util.iterator.Generator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.ning.compress.lzf.LZFEncoder;
+import com.ning.compress.lzf.LZFInputStream;
 
 /**
  * @author nilsdijk
@@ -28,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class SSTable extends Collection implements Closeable
 {
 	public static final int FILE_HEADER = 0xEFADE000;
-	public static final int FILE_VERSION = 1;
+	public static final int FILE_VERSION = 2;
 
 	private static final Logger log = LoggerFactory.getLogger(SSTable.class);
 
@@ -36,17 +40,21 @@ public class SSTable extends Collection implements Closeable
 	private static final int MAX_DATA_SIZE = 512 * 1024 * 1024;
 
 	public final File file;
+	public final UUID max;
+	public final UUID min;
+	public final Header header;
+	public final int version;
 
 	protected final UUIDPositionIndex index;
 
 	private final BloomFilter bloom;
-
 	private final ByteBuffer datamap;
-	private final UUID max;
-	private final UUID min;
 	private final RandomAccessFile raf;
-	private final Header header;
-	private final int version;
+
+	public static interface Visitor
+	{
+		void visit(SSTable table);
+	}
 
 	public SSTable(File file) throws IOException
 	{
@@ -69,6 +77,9 @@ public class SSTable extends Collection implements Closeable
 				case 1:
 					header = Header.readFromEnd(raf);
 					break;
+				case 2:
+					header = Header.read2(raf);
+					break;
 				default:
 					log.error("Invalid version (version:{})", this.version);
 					throw new IOException("Invalid file version");
@@ -86,6 +97,11 @@ public class SSTable extends Collection implements Closeable
 		// the beginning of the file to the start of the index is the datapart of the file
 		this.datamap = header.map(raf, Header.Type.DATA);
 		this.bloom = BloomFilter.fromBuffer(header.map(raf, Header.Type.BLOOM));
+	}
+
+	public void accept(Visitor visitor)
+	{
+		visitor.visit(this);
 	}
 
 	/*
@@ -154,11 +170,28 @@ public class SSTable extends Collection implements Closeable
 
 	public Document get(UUIDPositionIndex.Pointer pointer)
 	{
-		DataInput di = new ByteBufferDataInput((ByteBuffer) this.datamap.duplicate().position(pointer.pos));
-		if (this.version == 1) {
+		DataInput di;
+		ByteBuffer buffer = this.datamap.duplicate();
+		buffer.position(pointer.pos);
+		if (this.header.get(Header.Type.DATA).flags.contains(Header.Flags.LZF)) {
 			try {
-				di.readLong();
-				di.readLong();
+				di = new DataInputStream(new LZFInputStream(new ByteBufferInputStream(buffer)));
+			} catch (IOException ball) {
+				log.error("The data in {} is LZF encoded, but the decoder did not initialize", this.file);
+				return null;
+			}
+		} else {
+			di = new ByteBufferDataInput(buffer);
+		}
+
+		if (this.header.version >= 2 || this.version == 1) {
+			UUID id = null;
+			try {
+				id = new UUID(di.readLong(), di.readLong());
+				if (!id.equals(pointer.id)) {
+					log.error("The pointer for {} did not point to the correct entry in {}", pointer.id, this.file);
+					return null;
+				}
 			} catch (IOException ball) {
 				ball.printStackTrace();
 			}
@@ -182,9 +215,9 @@ public class SSTable extends Collection implements Closeable
 	@Override
 	public Iterator<Entry> iterator()
 	{
-		if (this.version == 1) {
+		if (this.version == 1 || this.header.version >= 2) {
 			try {
-				return new SSTableIterator(this.file, this.header.position(Header.Type.DATA), this.header.length(Header.Type.DATA));
+				return new SSTableIterator(this.file, this.header.get(Header.Type.DATA));
 			} catch (IOException ball) {
 				ball.printStackTrace();
 				// fall-throug to old implementation
@@ -272,10 +305,13 @@ public class SSTable extends Collection implements Closeable
 
 			raf.writeInt(SSTable.FILE_HEADER | SSTable.FILE_VERSION);
 
-			Header header = new Header();
+			Header header = new Header(2);
 
 			long offset = raf.getFilePointer();
-			header.put(Header.Type.DATA, offset);
+			header.put(Header.Type.DATA, offset, Header.Flags.LZF);
+
+			header.uncompressed = 0;
+			header.compressed = 0;
 
 			// write the datablob
 			while (it.hasNext() && raf.getFilePointer() < maxdatasize) {
@@ -288,7 +324,17 @@ public class SSTable extends Collection implements Closeable
 
 				// serialize document
 				e.doc.accept(DocumentSerializerVisitor.VISITOR, dos);
-				raf.write(bos.toByteArray());
+
+				// compress the data
+				byte[] orig = bos.toByteArray();
+				byte[] comp = LZFEncoder.encode(orig);
+
+				// count the bytes
+				header.uncompressed += orig.length;
+				header.compressed += comp.length;
+
+				// write the compressed data to the file
+				raf.write(comp);
 				bos.reset();
 			}
 
@@ -319,7 +365,7 @@ public class SSTable extends Collection implements Closeable
 			header.put(Header.Type.EOF, raf.getFilePointer());
 
 			// the offset where the index starts
-			header.writeAtEnd(raf);
+			header.write2(raf);
 
 			// close the file
 			raf.close();

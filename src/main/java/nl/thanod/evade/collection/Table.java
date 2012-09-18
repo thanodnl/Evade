@@ -125,7 +125,7 @@ public class Table extends Collection
 			for (File sstable : SSTable.save(this.directory, this.name, old)) {
 				// and add all created tables for resolving
 				this.addSSTable(new SSTable(sstable));
-				log.info("Saved memtable to sstable: {}",sstable);
+				log.info("Saved memtable to sstable: {}", sstable);
 			}
 		} catch (FileNotFoundException ball) {
 			ball.printStackTrace();
@@ -176,8 +176,8 @@ public class Table extends Collection
 		Bloom<UUID> bloom = new Bloom<UUID>(id, BloomHasher.UUID);
 		Document doc = null;
 		for (SSTable ss : this.sstables) {
-			if (ss.earlySkip(bloom))
-				continue;
+			//			if (ss.earlySkip(bloom))
+			//				continue;
 			doc = Document.merge(doc, ss.get(id));
 		}
 		doc = Document.merge(doc, getMemtable().get(id));
@@ -234,6 +234,12 @@ public class Table extends Collection
 				throw new NoSuchElementException();
 			}
 		};
+	}
+
+	public void accept(SSTable.Visitor visitor)
+	{
+		for (SSTable sstable:this.sstables)
+			sstable.accept(visitor);
 	}
 
 	public static Table load(final File dir, final String name)

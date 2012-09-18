@@ -19,16 +19,16 @@ public class HeaderTester
 		File tmp = File.createTempFile("header", ".eva");
 		tmp.deleteOnExit();
 
-		Header header = new Header();
-		header.put(Header.Type.DATA, 0);
+		Header header = new Header(2);
+		header.put(Header.Type.DATA, 0, Header.Flags.LZF);
 		header.put(Header.Type.INDEX_DESC, 10);
 		header.put(Header.Type.EOF, 15);
 		System.out.println(header);
 
 		RandomAccessFile raf = new RandomAccessFile(tmp, "rw");
-		header.writeAtEnd(raf);
+		header.write2(raf);
 
-		Header read = Header.readFromEnd(raf);
+		Header read = Header.read2(raf);
 		System.out.println(read);
 		raf.close();
 	}

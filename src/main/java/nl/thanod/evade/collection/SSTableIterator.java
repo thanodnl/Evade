@@ -7,8 +7,11 @@ import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import com.ning.compress.lzf.LZFInputStream;
+
 import nl.thanod.evade.document.Document.Entry;
 import nl.thanod.evade.document.visitor.DocumentSerializerVisitor;
+import nl.thanod.evade.store.Header;
 import nl.thanod.evade.util.iterator.Generator;
 
 /**
@@ -18,21 +21,22 @@ public class SSTableIterator extends Generator<Entry> implements Closeable
 {
 
 	private final DataInputStream din;
-	private LimitedInputStream lin;
 
 	/**
 	 * @param file
-	 * @param position
-	 * @param length
+	 * @param entry
 	 * @throws IOException
 	 */
-	public SSTableIterator(File file, int position, int length) throws IOException
+	public SSTableIterator(File file, Header.Entry entry) throws IOException
 	{
 		BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file), 1024 * 1024);
-		buf.skip(position);
-		this.lin = new LimitedInputStream(buf, length);
+		buf.skip(entry.start);
+		InputStream in = new LimitedInputStream(buf, entry.next().start - entry.start);
 
-		this.din = new DataInputStream(this.lin);
+		if (entry.flags.contains(Header.Flags.LZF))
+			in = new LZFInputStream(in);
+
+		this.din = new DataInputStream(in);
 	}
 
 	/*
@@ -42,11 +46,11 @@ public class SSTableIterator extends Generator<Entry> implements Closeable
 	@Override
 	protected Entry generate() throws NoSuchElementException
 	{
-		if (this.lin.available() <= 0)
-			throw new NoSuchElementException();
 		UUID id;
 		try {
 			id = new UUID(this.din.readLong(), this.din.readLong());
+		} catch (EOFException ball) {
+			throw new NoSuchElementException();
 		} catch (IOException ball) {
 			throw new RuntimeException("Error while reading uuid", ball);
 		}
