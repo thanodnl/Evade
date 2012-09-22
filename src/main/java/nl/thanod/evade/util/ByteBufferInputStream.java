@@ -3,7 +3,9 @@
  */
 package nl.thanod.evade.util;
 
+import java.io.EOFException;
 import java.io.InputStream;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 /**
@@ -25,14 +27,22 @@ public class ByteBufferInputStream extends InputStream
 	@Override
 	public int read()
 	{
-		return this.buffer.get() & 0xFF;
+		try {
+			return this.buffer.get() & 0xFF;
+		} catch (BufferUnderflowException ball) {
+			return -1;
+		}
 	}
 
 	@Override
-	public int read(byte[] buffer, int offset, int length)
+	public int read(byte[] buffer, int offset, int length) throws EOFException
 	{
-		this.buffer.get(buffer, offset, length);
-		return length;
+		try {
+			this.buffer.get(buffer, offset, length);
+			return length;
+		} catch (BufferUnderflowException ball) {
+			return -1;
+		}
 	}
 
 }

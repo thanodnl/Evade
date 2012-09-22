@@ -13,7 +13,6 @@ import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.database.DatabaseConfiguration;
 import nl.thanod.evade.document.DocumentPath;
-import nl.thanod.evade.document.IntegerDocument;
 import nl.thanod.evade.document.StringDocument;
 import nl.thanod.evade.document.ValueDocument;
 
@@ -24,22 +23,20 @@ public class Find
 {
 	public static void main(String... args) throws IOException
 	{
+		String collection = "github_small";
 		DatabaseConfiguration conf = new DatabaseConfiguration();
 		conf.datadir = new File("data");
 
 		Database db = conf.loadDatabase();
 		IndexDescriptor desc = new IndexDescriptor(new DocumentPath("actor"));
-		
-		System.out.println(db.getCollection("github").iterator().next());
 
-		db.ensureIndex(null, "github", desc);
-		db.ensureIndex(null, "names", desc);
-		CompoundIndex idx = db.getTableIndex("github").get(desc);
-		
-		Table table = db.getCollection("github");
-		
+		db.ensureIndex(null, collection, desc);
+		CompoundIndex idx = db.getTableIndex(collection).get(desc);
+
+		Table table = db.getCollection(collection);
+
 		final ValueDocument find = new StringDocument("okoeroo");
-		
+
 		Comparable<Entry> comp = new Comparable<Entry>() {
 			@Override
 			public int compareTo(Entry paramT)
@@ -52,7 +49,7 @@ public class Find
 		while (e != null) {
 			if (comp.compareTo(e) != 0)
 				break;
-//			System.out.println(e);
+			System.out.println(e.id + ": " + table.get(e.id));
 			c++;
 			e = e.next();
 		}

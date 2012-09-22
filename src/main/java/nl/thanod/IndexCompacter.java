@@ -19,7 +19,7 @@ public class IndexCompacter
 {
 	public static void main(String... args) throws IOException
 	{
-		final String name = "github";
+		final String name = "github_small";
 		File dir = new File("data", name);
 		File[] indexFiles = dir.listFiles(new FilenameFilter() {
 

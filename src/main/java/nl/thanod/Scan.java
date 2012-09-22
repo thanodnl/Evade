@@ -29,6 +29,7 @@ public class Scan
 
 		long start = System.nanoTime();
 		int c = 0;
+
 		for (Document.Entry e : t) {
 			Document d = e.doc;
 			c++;

@@ -218,12 +218,34 @@ public class SSTable extends Collection implements Closeable
 	public Iterator<Entry> iterator()
 	{
 		if (this.version == 1 || this.header.version >= 2) {
+			Header.Entry data = this.header.get(Header.Type.DATA);
+
+			InputStream in = null;
+
+			// open file
 			try {
-				return new SSTableIterator(this.file, this.header.get(Header.Type.DATA));
+				in = new FileInputStream(this.file);
+				in.skip(data.start);
+				in = new LimitedInputStream(in, data.next().start - data.start);
 			} catch (IOException ball) {
-				ball.printStackTrace();
-				// fall-throug to old implementation
 			}
+			
+			// fallback on memory map
+			if (in == null){
+				final ByteBuffer buffer = this.datamap.duplicate();
+				buffer.position(0);
+				in = new ByteBufferInputStream(buffer);
+			}
+
+			// apply lzf when compressed
+			if (data.flags.contains(Header.Flags.LZF)) {
+				try {
+					in = new LZFInputStream(in, true);
+				} catch (IOException ball) {
+				}
+			}
+			
+			return new DocumentStream(new DataInputStream(in));
 		}
 
 		final ByteBuffer buffer = this.datamap.duplicate();
@@ -361,7 +383,7 @@ public class SSTable extends Collection implements Closeable
 			raf.write(bos.toByteArray());
 			bos.reset();
 
-			if (bloom != null){
+			if (bloom != null) {
 				header.put(Header.Type.BLOOM, raf.getFilePointer());
 				bloom.write(raf);
 			}

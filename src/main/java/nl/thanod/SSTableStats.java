@@ -43,7 +43,7 @@ public class SSTableStats implements SSTable.Visitor
 		conf.datadir = new File("data");
 
 		Database db = conf.loadDatabase();
-		Table t = db.getCollection("names");
+		Table t = db.getCollection("github_small");
 		
 		SSTableStats stats = new SSTableStats();
 		t.accept(stats);
