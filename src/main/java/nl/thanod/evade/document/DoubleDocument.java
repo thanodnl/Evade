@@ -49,8 +49,8 @@ public class DoubleDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	public String valueString()
 	{
-		return super.toString() + this.value;
+		return Double.toString(this.value);
 	}
 }

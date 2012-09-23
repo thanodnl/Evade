@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import nl.thanod.evade.document.*;
 import nl.thanod.evade.document.visitor.DocumentVisitor;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -124,5 +125,19 @@ public class JSONifier extends DocumentVisitor<Object, Void>
 	public Object visit(FloatDocument doc, Void data)
 	{
 		return doc.value;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.
+	 * evade.document.TupleDocument, java.lang.Object)
+	 */
+	@Override
+	public Object visit(TupleDocument doc, Void data)
+	{
+		JSONArray arr = new JSONArray();
+		for (int i = 0; i < doc.size(); i++)
+			arr.put(doc.get(i).accept(this, data));
+		return arr;
 	}
 }

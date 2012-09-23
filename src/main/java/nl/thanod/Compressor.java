@@ -43,7 +43,7 @@ public class Compressor
 			} catch (IOException ball) {
 				ball.printStackTrace();
 			};
-			e.doc.accept(DocumentSerializerVisitor.VISITOR, dos);
+			e.doc.accept(DocumentSerializerVisitor.VERSIONED, dos);
 			
 			byte[] orig = bos.toByteArray();
 			byte[] compressed = LZFEncoder.encode(orig);

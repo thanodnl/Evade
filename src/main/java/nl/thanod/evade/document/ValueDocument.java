@@ -38,4 +38,15 @@ public abstract class ValueDocument extends Document
 	}
 
 	protected abstract int compareValue(ValueDocument other);
+
+	@Override
+	public String toString()
+	{
+		return super.toString() + this.valueString();
+	}
+
+	/**
+	 * @return
+	 */
+	protected abstract String valueString();
 }

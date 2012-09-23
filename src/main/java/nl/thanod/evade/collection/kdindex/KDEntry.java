@@ -108,7 +108,7 @@ public class KDEntry
 		out.writeInt(size);
 
 		for (int i = 0; i < size; i++)
-			entry.get(i).accept(DocumentSerializerVisitor.VISITOR, out);
+			entry.get(i).accept(DocumentSerializerVisitor.VERSIONED, out);
 	}
 
 	public static KDEntry read(DataInput in) throws IOException
@@ -118,7 +118,7 @@ public class KDEntry
 
 		ValueDocument[] docs = new ValueDocument[count];
 		for (int i = 0; i < count; i++)
-			docs[i] = (ValueDocument) DocumentSerializerVisitor.deserialize(in);
+			docs[i] = (ValueDocument) DocumentSerializerVisitor.VERSIONED.deserialize(in);
 		return new KDEntry(id, docs);
 	}
 }

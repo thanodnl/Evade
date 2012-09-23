@@ -119,6 +119,18 @@ public abstract class AbstractDocumentVisitor<OUT, IN> extends DocumentVisitor<O
 		return defaultVisit(doc, data);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see
+	 * nl.thanod.evade.document.visitor.DocumentVisitor#visit(nl.thanod.evade
+	 * .document.TupleDocument, java.lang.Object)
+	 */
+	@Override
+	public OUT visit(TupleDocument doc, IN data)
+	{
+		return defaultVisit(doc, data);
+	}
+
 	/**
 	 * This method is called when the implementor of a visitor did not overwrite
 	 * the specified visit method for the document being visited. It is

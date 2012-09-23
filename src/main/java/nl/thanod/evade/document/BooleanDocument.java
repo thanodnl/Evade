@@ -48,9 +48,9 @@ public class BooleanDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + this.value;
+		return Boolean.toString(this.value);
 	}
 
 }

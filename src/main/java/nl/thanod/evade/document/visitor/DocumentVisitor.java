@@ -113,4 +113,15 @@ public abstract class DocumentVisitor<OUT, IN>
 	 */
 	public abstract OUT visit(FloatDocument doc, IN data);
 
+	/**
+	 * Called on a visitor by the
+	 * {@link TupleDocument#accept(DocumentVisitor, Object)} method
+	 * @param doc
+	 *            the {@link TupleDocument} on which the accept method is called
+	 * @param data
+	 *            user data provided to the accept method
+	 * @return the value of type OUT calculated by the visit method
+	 */
+	public abstract OUT visit(TupleDocument doc, IN data);
+
 }

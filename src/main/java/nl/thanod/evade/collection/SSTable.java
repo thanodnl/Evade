@@ -198,7 +198,7 @@ public class SSTable extends Collection implements Closeable
 				ball.printStackTrace();
 			}
 		}
-		return DocumentSerializerVisitor.deserialize(di);
+		return DocumentSerializerVisitor.VERSIONED.deserialize(di);
 	}
 
 	@Override
@@ -264,7 +264,7 @@ public class SSTable extends Collection implements Closeable
 				++ordinal;
 				if (p.pos != buffer.position())
 					buffer.position(p.pos);
-				return new Entry(p.id, DocumentSerializerVisitor.deserialize(input));
+				return new Entry(p.id, DocumentSerializerVisitor.VERSIONED.deserialize(input));
 			}
 		};
 	}
@@ -347,7 +347,7 @@ public class SSTable extends Collection implements Closeable
 				dos.writeLong(e.id.getLeastSignificantBits());
 
 				// serialize document
-				e.doc.accept(DocumentSerializerVisitor.VISITOR, dos);
+				e.doc.accept(DocumentSerializerVisitor.VERSIONED, dos);
 
 				// compress the data
 				byte[] orig = bos.toByteArray();

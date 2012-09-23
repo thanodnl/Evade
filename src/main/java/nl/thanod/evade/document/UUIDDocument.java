@@ -51,9 +51,9 @@ public class UUIDDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + this.value;
+		return this.value.toString();
 	}
 
 }

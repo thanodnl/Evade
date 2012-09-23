@@ -48,7 +48,8 @@ public abstract class Document
 		LONG(0x12),
 		UUID(0x13),
 		DOUBLE(0x14),
-		FLOAT(0x15);
+		FLOAT(0x15),
+		TUPLE(0x20);
 
 		public final int code;
 
@@ -181,17 +182,17 @@ public abstract class Document
 		doc1 = doc1.clearOn(cleared);
 		doc2 = doc2.clearOn(cleared);
 		Map<String, Document> map = new HashMap<String, Document>();
-		
+
 		// populate the new map with the contents of the first dict
 		for (Map.Entry<String, Document> e : doc1.entrySet())
 			map.put(e.getKey(), e.getValue());
-		
+
 		// merge the second dict into it
 		for (Map.Entry<String, Document> e : doc2.entrySet()) {
 			Document d = Document.merge(e.getValue(), map.get(e.getKey()));
 			map.put(e.getKey(), d);
 		}
-		
+
 		return new DictDocument(map, cleared, false);
 	}
 

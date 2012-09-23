@@ -49,9 +49,9 @@ public class IntegerDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + this.value;
+		return Integer.toString(this.value);
 	}
 
 }

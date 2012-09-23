@@ -93,7 +93,7 @@ public class SSIndex extends Index
 			buffer.position(sortedIndex.offset(index));
 			DataInput in = new ByteBufferDataInput(buffer);
 			UUID id = new UUID(in.readLong(), in.readLong());
-			Document match = DocumentSerializerVisitor.deserialize(in);
+			Document match = DocumentSerializerVisitor.VERSIONED.deserialize(in);
 			return new SSIndexEntry(index, id, (ValueDocument) match);
 		} catch (Exception ball) {
 			// something went terribly wrong
@@ -120,6 +120,6 @@ public class SSIndex extends Index
 		
 		// go to the place where the index descriptor is written
 		raf.seek(desc.start);
-		return IndexDescriptor.deserialize(DocumentSerializerVisitor.deserialize(raf));
+		return IndexDescriptor.deserialize(DocumentSerializerVisitor.VERSIONED.deserialize(raf));
 	}
 }

@@ -31,9 +31,9 @@ public class StringDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + '"' + this.value + '"';
+		return '"' + this.value + '"';
 	}
 
 	@Override

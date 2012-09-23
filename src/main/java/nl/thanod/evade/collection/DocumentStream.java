@@ -4,7 +4,6 @@
 package nl.thanod.evade.collection;
 
 import java.io.DataInput;
-import java.io.EOFException;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -35,7 +34,7 @@ public class DocumentStream extends Generator<Document.Entry>
 	{
 		try {
 			UUID id = new UUID(this.in.readLong(), this.in.readLong());
-			Document doc = DocumentSerializerVisitor.deserialize(this.in);
+			Document doc = DocumentSerializerVisitor.VERSIONED.deserialize(this.in);
 			return new Document.Entry(id, doc);
 		} catch (IOException ball) {
 			throw new NoSuchElementException();

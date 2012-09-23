@@ -50,9 +50,9 @@ public class FloatDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + this.value;
+		return Float.toString(this.value);
 	}
 
 }

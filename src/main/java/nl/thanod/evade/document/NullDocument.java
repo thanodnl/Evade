@@ -20,9 +20,9 @@ public class NullDocument extends ValueDocument
 	}
 
 	@Override
-	public String toString()
+	protected String valueString()
 	{
-		return super.toString() + "null";
+		return "null";
 	}
 
 	/*

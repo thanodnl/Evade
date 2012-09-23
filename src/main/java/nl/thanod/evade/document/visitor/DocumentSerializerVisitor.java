@@ -22,10 +22,14 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 
 	public static final Charset STRING_ENCODING = Charset.forName("UTF8");
 
-	public static final DocumentSerializerVisitor VISITOR = new DocumentSerializerVisitor();
+	public static final DocumentSerializerVisitor VERSIONED = new DocumentSerializerVisitor(true);
+	public static final DocumentSerializerVisitor NON_VERSIONED = new DocumentSerializerVisitor(false);
 
-	private DocumentSerializerVisitor()
+	public final boolean versioned;
+
+	private DocumentSerializerVisitor(boolean versioned)
 	{
+		this.versioned = versioned;
 	}
 
 	/*
@@ -40,8 +44,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
-
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			// write the length of the string followed by the contents
 			out.writeUTF(doc.value);
 		} catch (IOException ball) {
@@ -62,7 +67,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
 		}
@@ -112,7 +119,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.write(doc.value ? 0xFF : 0x00);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
@@ -132,7 +141,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.writeInt(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
@@ -152,7 +163,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.writeLong(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
@@ -172,7 +185,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.writeLong(doc.value.getMostSignificantBits());
 			out.writeLong(doc.value.getLeastSignificantBits());
 		} catch (IOException ball) {
@@ -193,7 +208,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.writeDouble(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
@@ -213,7 +230,9 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		try {
 			// general document information
 			out.write(doc.type.code);
-			out.writeLong(doc.version);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
 			out.writeFloat(doc.value);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
@@ -221,28 +240,70 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 		return null;
 	}
 
-	public static Document deserialize(DataInput stream)
+	@Override
+	public Void visit(TupleDocument doc, DataOutput out)
+	{
+		try {
+			// general document information
+			out.write(doc.type.code);
+			// write version
+			if (versioned)
+				out.writeLong(doc.version);
+			out.writeInt(doc.size());
+			for (int i = 0; i < doc.size(); i++)
+				doc.get(i).accept(DocumentSerializerVisitor.NON_VERSIONED, out);
+		} catch (IOException ball) {
+			throw new RuntimeException(ball);
+		}
+		return null;
+	}
+
+	public Document deserialize(DataInput stream)
 	{
 		try {
 			int code = stream.readByte() & 0xFF;
 			Document.Type type = Document.Type.getByCode(code);
+			long version = 0;
 			switch (type) {
 				case NULL:
-					return new NullDocument(stream.readLong());
+					if (this.versioned)
+						version = stream.readLong();
+					return new NullDocument(version);
 				case STRING:
-					return new StringDocument(stream.readLong(), stream.readUTF());
+					if (this.versioned)
+						version = stream.readLong();
+					return new StringDocument(version, stream.readUTF());
 				case BOOLEAN:
-					return new BooleanDocument(stream.readLong(), stream.readByte() != 0);
+					if (this.versioned)
+						version = stream.readLong();
+					return new BooleanDocument(version, stream.readByte() != 0);
 				case INTEGER:
-					return new IntegerDocument(stream.readLong(), stream.readInt());
+					if (this.versioned)
+						version = stream.readLong();
+					return new IntegerDocument(version, stream.readInt());
 				case LONG:
-					return new LongDocument(stream.readLong(), stream.readLong());
+					if (this.versioned)
+						version = stream.readLong();
+					return new LongDocument(version, stream.readLong());
 				case UUID:
-					return new UUIDDocument(stream.readLong(), new UUID(stream.readLong(), stream.readLong()));
+					if (this.versioned)
+						version = stream.readLong();
+					return new UUIDDocument(version, new UUID(stream.readLong(), stream.readLong()));
 				case DOUBLE:
-					return new DoubleDocument(stream.readLong(), stream.readDouble());
+					if (this.versioned)
+						version = stream.readLong();
+					return new DoubleDocument(version, stream.readDouble());
 				case FLOAT:
-					return new FloatDocument(stream.readLong(), stream.readFloat());
+					if (this.versioned)
+						version = stream.readLong();
+					return new FloatDocument(version, stream.readFloat());
+				case TUPLE:
+					if (this.versioned)
+						version = stream.readLong();
+					ValueDocument[] docs = new ValueDocument[stream.readInt()];
+					for (int i = 0; i < docs.length; i++)
+						docs[i] = (ValueDocument) DocumentSerializerVisitor.NON_VERSIONED.deserialize(stream);
+					return new TupleDocument(version, docs);
 				case DICT:
 					Map<String, Document> map = new HashMap<String, Document>();
 					while (stream.readByte() != 0)
@@ -261,7 +322,7 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 	 * @param in
 	 * @param out
 	 */
-	public static void move(DataInput in, DataOutput out)
+	public void move(DataInput in, DataOutput out)
 	{
 		int temp;
 		try {
@@ -273,36 +334,54 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 			Document.Type type = Document.Type.getByCode(code);
 			switch (type) {
 				case NULL:
-					out.writeLong(in.readLong()); // verion
+					if (this.versioned)
+						out.writeLong(in.readLong()); // verion
 					break; // no data
 				case STRING:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeUTF(in.readUTF()); // data
 					break;
 				case BOOLEAN:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeByte(in.readByte()); // data
 					break;
 				case INTEGER:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeInt(in.readInt()); // data
 					break;
 				case LONG:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeLong(in.readLong()); // data
 					break;
 				case UUID:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeLong(in.readLong()); // data 128-bit
 					out.writeLong(in.readLong());
 					break;
 				case DOUBLE:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeDouble(in.readDouble()); // data
 					break;
 				case FLOAT:
-					out.writeLong(in.readLong()); // version
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
 					out.writeFloat(in.readFloat()); // data
+					break;
+				case TUPLE:
+					if (this.versioned)
+						out.writeLong(in.readLong()); // version
+					int size;
+					out.writeInt(size = in.readInt()); // number of items in tuple
+					while (size > 0) {
+						DocumentSerializerVisitor.NON_VERSIONED.move(in, out);
+						--size;
+					}
 					break;
 				case DICT:
 					// data

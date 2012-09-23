@@ -69,7 +69,7 @@ public class IndexSerializer
 			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the document to cache for performace
-			e.match.accept(DocumentSerializerVisitor.VISITOR, dos);
+			e.match.accept(DocumentSerializerVisitor.VERSIONED, dos);
 
 			// write the cached document to file
 			raf.write(bos.toByteArray());
@@ -97,7 +97,7 @@ public class IndexSerializer
 
 		// write the index descriptor
 		indexHeader.put(Header.Type.INDEX_DESC, (int) raf.getFilePointer());
-		desc.serialize().accept(DocumentSerializerVisitor.VISITOR, dos);
+		desc.serialize().accept(DocumentSerializerVisitor.VERSIONED, dos);
 		if (bos.size() > 0)
 			raf.write(bos.toByteArray());
 		bos.reset();
@@ -185,7 +185,7 @@ public class IndexSerializer
 			dos.writeLong(id.getLeastSignificantBits());
 
 			// write the document to cache
-			idx.accept(DocumentSerializerVisitor.VISITOR, dos);
+			idx.accept(DocumentSerializerVisitor.VERSIONED, dos);
 
 			// write the cached document to file
 			raf.write(bos.toByteArray());
@@ -208,7 +208,7 @@ public class IndexSerializer
 			{
 				map.position(from.intValue() + 16); // skip 16 bytes because of the uuid
 
-				Document doc = DocumentSerializerVisitor.deserialize(reader);
+				Document doc = DocumentSerializerVisitor.VERSIONED.deserialize(reader);
 
 				if (doc instanceof ValueDocument)
 					return (ValueDocument) doc;
@@ -236,7 +236,7 @@ public class IndexSerializer
 
 		// write the index descriptor
 		indexHeader.put(Header.Type.INDEX_DESC, (int) raf.getFilePointer());
-		desc.serialize().accept(DocumentSerializerVisitor.VISITOR, dos);
+		desc.serialize().accept(DocumentSerializerVisitor.VERSIONED, dos);
 		if (bos.size() > 0)
 			raf.write(bos.toByteArray());
 		bos.reset();
@@ -278,7 +278,7 @@ public class IndexSerializer
 			protected ValueDocument convert(Long from)
 			{
 				this.map.position(from.intValue() + 16);
-				return (ValueDocument) DocumentSerializerVisitor.deserialize(new ByteBufferDataInput(this.map));
+				return (ValueDocument) DocumentSerializerVisitor.VERSIONED.deserialize(new ByteBufferDataInput(this.map));
 			}
 		});
 
@@ -318,7 +318,7 @@ public class IndexSerializer
 			dos.writeLong(tmap.getLong());
 
 			// copy the document to cache
-			DocumentSerializerVisitor.move(tdi, dos);
+			DocumentSerializerVisitor.VERSIONED.move(tdi, dos);
 
 			// flush data from cache
 			raf.write(bos.toByteArray());
@@ -370,7 +370,7 @@ public class IndexSerializer
 
 		// write the index descriptor
 		indexHeader.put(Header.Type.INDEX_DESC, (int) raf.getFilePointer());
-		desc.serialize().accept(DocumentSerializerVisitor.VISITOR, dos);
+		desc.serialize().accept(DocumentSerializerVisitor.VERSIONED, dos);
 		if (bos.size() > 0)
 			raf.write(bos.toByteArray());
 		bos.reset();
@@ -423,7 +423,7 @@ public class IndexSerializer
 			dos.writeLong(e.id.getLeastSignificantBits());
 
 			// write the contents of the document
-			doc.accept(DocumentSerializerVisitor.VISITOR, dos);
+			doc.accept(DocumentSerializerVisitor.VERSIONED, dos);
 			temp.write(bos.toByteArray());
 			bos.reset();
 		}
