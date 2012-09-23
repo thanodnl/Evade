@@ -230,14 +230,14 @@ public class SSTable extends Collection implements Closeable
 			} catch (IOException ball) {
 			}
 			
-			// fallback on memory map
+			// fallback on memory map when opening the file failed
 			if (in == null){
 				final ByteBuffer buffer = this.datamap.duplicate();
 				buffer.position(0);
 				in = new ByteBufferInputStream(buffer);
 			}
 
-			// apply lzf when compressed
+			// apply lzf when the data blob is compressed
 			if (data.flags.contains(Header.Flags.LZF)) {
 				try {
 					in = new LZFInputStream(in, true);
