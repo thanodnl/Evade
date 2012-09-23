@@ -46,7 +46,7 @@ public class TupleDocument extends ValueDocument
 		int max = Math.min(this.size(), td.size());
 		for (int i = 0; i < max; i++) {
 			int diff = this.get(i).compareValue(td.get(i));
-			if (diff == 0)
+			if (diff != 0)
 				return diff;
 		}
 		return this.size() - td.size();
@@ -87,8 +87,8 @@ public class TupleDocument extends ValueDocument
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append('(');
-		for (int i=0; i<this.size(); i++){
-			if (i>0)
+		for (int i = 0; i < this.size(); i++) {
+			if (i > 0)
 				sb.append(',');
 			sb.append(this.get(i).valueString());
 		}
@@ -105,5 +105,19 @@ public class TupleDocument extends ValueDocument
 				return false;
 		}
 		return true;
+	}
+
+	/**
+	 * @param data
+	 * @return
+	 */
+	public TupleDocument granularity(int size)
+	{
+		if (size >= this.size())
+			return this;
+		ValueDocument[] docs = new ValueDocument[size];
+		for (int i = 0; i < size; i++)
+			docs[i] = this.get(i);
+		return new TupleDocument(this.version, docs);
 	}
 }
