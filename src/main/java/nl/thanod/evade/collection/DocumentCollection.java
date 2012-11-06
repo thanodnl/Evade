@@ -10,7 +10,7 @@ import nl.thanod.evade.document.Document;
 /**
  * @author nilsdijk
  */
-public abstract class Collection implements Iterable<Document.Entry>
+public abstract class DocumentCollection implements Iterable<Document.Entry>
 {
 	public abstract Iterable<UUID> uuids();
 	

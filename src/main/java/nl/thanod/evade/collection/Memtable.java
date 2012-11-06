@@ -8,15 +8,21 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import nl.thanod.evade.document.Document;
+import nl.thanod.evade.document.Document.Entry;
 
 /**
  * @author nilsdijk
  */
-public class Memtable extends Collection
+public class Memtable extends DocumentCollection
 {
 
-	private final Map<UUID, Document> docs = new TreeMap<UUID, Document>();
+	private final Map<UUID, Document> docs = new HashMap<UUID, Document>();
 	private final ReadWriteLock rwl = new ReentrantReadWriteLock();
+
+	/**
+	 * Indicating if this {@link Memtable} has already been locked for writing.
+	 */
+	private volatile boolean locked = false;
 
 	public Memtable()
 	{
@@ -52,13 +58,24 @@ public class Memtable extends Collection
 		}
 	}
 
+	/**
+	 * @param id
+	 *            the {@link UUID} to store the {@link Document} under
+	 * @param doc
+	 *            the {@link Document} to store
+	 * @return A reference to this for daisy chainging
+	 * @throws IllegalStateException
+	 *             when the {@link Memtable} is locked before writing
+	 */
 	public Memtable update(UUID id, Document doc)
 	{
-		this.rwl.writeLock().lock();
+		writeLock();
 		try {
-			if (this.docs.containsKey(id))
-				doc = Document.merge(this.docs.get(id), doc);
-			this.docs.put(id, doc);
+			Document prev = this.docs.put(id, doc);
+			if (prev != null) {
+				// if there was already an item in the store merge them and store the result
+				this.docs.put(id, Document.merge(prev, doc));
+			}
 		} finally {
 			this.rwl.writeLock().unlock();
 		}
@@ -72,15 +89,30 @@ public class Memtable extends Collection
 	@Override
 	public Iterator<Document.Entry> iterator()
 	{
-		this.rwl.readLock().lock();
-		try {
-			List<Document.Entry> list = new ArrayList<Document.Entry>(this.docs.size());
-			for (Map.Entry<UUID, Document> e : this.docs.entrySet())
-				list.add(new Document.Entry(e.getKey(), e.getValue()));
-			return list.iterator();
-		} finally {
-			this.rwl.readLock().unlock();
-		}
+		final Queue<UUID> sortedKeys = uuids();
+
+		// iterator to iterate the entries present while initiating the iteration
+		return new Iterator<Document.Entry>() {
+
+			@Override
+			public boolean hasNext()
+			{
+				return !sortedKeys.isEmpty();
+			}
+
+			@Override
+			public Entry next()
+			{
+				UUID id = sortedKeys.poll();
+				return new Document.Entry(id, Memtable.this.get(id));
+			}
+
+			@Override
+			public void remove()
+			{
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 
 	@Override
@@ -105,12 +137,56 @@ public class Memtable extends Collection
 		return this.docs.size();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see nl.thanod.evade.collection.Collection#ids()
 	 */
 	@Override
-	public Iterable<UUID> uuids()
+	public PriorityQueue<UUID> uuids()
 	{
-		return Collections.unmodifiableSet(this.docs.keySet());
+		this.rwl.readLock().lock();
+		try {
+			return new PriorityQueue<UUID>(this.docs.keySet());
+		} finally {
+			this.rwl.readLock().unlock();
+		}
+	}
+
+	/**
+	 * Lock this table for further writes. Writes will throw an
+	 * {@link IllegalStateException} when occuring after {@link Memtable#lock()}
+	 * is called
+	 * @throws IllegalStateException
+	 *             when the {@link Memtable} is already locked
+	 */
+	public void lock()
+	{
+		writeLock();
+		try {
+			this.locked = true;
+		} finally {
+			this.rwl.writeLock().unlock();
+		}
+	}
+
+	/**
+	 * Acquire the writelock and check if the {@link Memtable} is not locked
+	 * during the acquiring
+	 * @throws IllegalStateException
+	 *             when the {@link Memtable} is already locked
+	 */
+	private void writeLock()
+	{
+		if (locked)
+			throw new IllegalStateException("Memtable already closed");
+		this.rwl.writeLock();
+		// if the memtable is locked after acquiring the lock
+		if (locked) {
+			try {
+				throw new IllegalStateException("Memtable already closed");
+			} finally {
+				this.rwl.writeLock().unlock();
+			}
+		}
 	}
 }

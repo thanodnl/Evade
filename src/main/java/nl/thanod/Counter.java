@@ -9,12 +9,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-import nl.thanod.evade.collection.ApproxCounter;
 import nl.thanod.evade.database.Database;
 import nl.thanod.evade.database.DatabaseConfiguration;
-import nl.thanod.evade.store.bloom.Bloom;
-import nl.thanod.evade.store.bloom.BloomFilter;
-import nl.thanod.evade.store.bloom.BloomHasher;
 import nl.thanod.evade.util.Stopwatch;
 
 /**
@@ -33,6 +29,7 @@ public class Counter
 			@Override
 			public Integer call() throws Exception
 			{
+				//				return db.getCollection("github").size();
 				int c = 0;
 				for (UUID uuid : db.getCollection("github").uuids())
 					c++;
@@ -41,12 +38,11 @@ public class Counter
 		}));
 		sw1.run();
 		System.out.println("counting " + sw1.delegate.get() + " entries took " + sw1);
-		
-//		ApproxCounter counter = new ApproxCounter(db.getCollection("github"));
-//		System.out.println(counter.get() + " items");
 
+		//		ApproxCounter counter = new ApproxCounter(db.getCollection("github"));
+		//		System.out.println(counter.get() + " items");
 
-//		final BloomFilter filter = BloomFilter.optimal(sw1.delegate.get(), 5);
+		//		final BloomFilter filter = BloomFilter.optimal(sw1.delegate.get(), 5);
 		//		Stopwatch<Runnable> sw2 = new Stopwatch<Runnable>(new Runnable() {
 		//			@Override
 		//			public void run()

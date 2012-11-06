@@ -25,12 +25,12 @@ public class TableCompacter implements Runnable
 
 	public static interface CompacterListener
 	{
-		public void compacted(Iterable<SSTable> source, Iterable<SSTable> created);
+		public void compacted(java.util.Collection<? extends SSTable> source, java.util.Collection<? extends SSTable> created);
 	}
 
 	private CompacterListener listener;
 	private final Table table;
-	private final Iterable<SSTable> tables;
+	private final java.util.Collection<? extends SSTable> tables;
 
 	public TableCompacter(Table table)
 	{
@@ -47,7 +47,7 @@ public class TableCompacter implements Runnable
 			this.listener = new CompacterListener() {
 
 				@Override
-				public void compacted(Iterable<SSTable> source, Iterable<SSTable> created)
+				public void compacted(java.util.Collection<? extends SSTable> source, java.util.Collection<? extends SSTable> created)
 				{
 					current.compacted(source, created);
 					listener.compacted(source, created);

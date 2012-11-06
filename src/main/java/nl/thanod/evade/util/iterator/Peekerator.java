@@ -30,16 +30,18 @@ public class Peekerator<E> implements Iterator<E>
 		@Override
 		public int compare(Peekerator<E> o1, Peekerator<E> o2)
 		{
-			return comp.compare(o1.peek(), o2.peek());
+			if (this.comp != null)
+				return this.comp.compare(o1.peek(), o2.peek());
+			return ((Comparable<E>) o1.peek()).compareTo(o2.peek());
 		}
 
 	}
 
-	private final Iterator<E> it;
+	private final Iterator<? extends E> it;
 	private E peek;
 	private boolean peeked;
 
-	public Peekerator(Iterator<E> it)
+	public Peekerator(Iterator<? extends E> it)
 	{
 		this.it = it;
 	}

@@ -29,7 +29,7 @@ import com.ning.compress.lzf.LZFInputStream;
 /**
  * @author nilsdijk
  */
-public class SSTable extends Collection implements Closeable
+public class SSTable extends DocumentCollection implements Closeable
 {
 	public static final int FILE_HEADER = 0xEFADE000;
 	public static final int FILE_VERSION = 2;
@@ -227,11 +227,12 @@ public class SSTable extends Collection implements Closeable
 				in = new FileInputStream(this.file);
 				in.skip(data.start);
 				in = new LimitedInputStream(in, data.next().start - data.start);
+				in = new BufferedInputStream(in, 1024 * 1024);
 			} catch (IOException ball) {
 			}
-			
+
 			// fallback on memory map when opening the file failed
-			if (in == null){
+			if (in == null) {
 				final ByteBuffer buffer = this.datamap.duplicate();
 				buffer.position(0);
 				in = new ByteBufferInputStream(buffer);
@@ -244,7 +245,7 @@ public class SSTable extends Collection implements Closeable
 				} catch (IOException ball) {
 				}
 			}
-			
+
 			return new DocumentStream(new DataInputStream(in));
 		}
 
@@ -408,8 +409,10 @@ public class SSTable extends Collection implements Closeable
 
 		// delete the file
 		if (!this.file.delete()) {
-			log.info("Can not delete {}, the file is marked for removal on exit", this.file);
+			log.error("Can not delete {}, the file is marked for removal on exit", this.file);
 			this.file.deleteOnExit();
+		} else {
+			log.info("Deleted {} from disk", this.file);
 		}
 	}
 }

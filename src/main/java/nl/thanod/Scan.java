@@ -23,9 +23,9 @@ public class Scan
 		conf.datadir = new File("data");
 
 		Database db = conf.loadDatabase();
-		Table t = db.getCollection("github_small");
+		Table t = db.getCollection("github");
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 1; i++) {
 			long start = System.nanoTime();
 			int c = 0;
 			for (Document.Entry e : t) {

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import nl.thanod.evade.collection.Collection;
+import nl.thanod.evade.collection.DocumentCollection;
 import nl.thanod.evade.collection.SSTable;
 import nl.thanod.evade.document.Document;
 import nl.thanod.evade.util.Documenter;
@@ -55,7 +55,7 @@ public class Reading
 		System.out.println(c);
 	}
 
-	public static void containsTest(Collection c)
+	public static void containsTest(DocumentCollection c)
 	{
 		for (Document.Entry e : c) {
 			if (!c.contains(e.id)) {

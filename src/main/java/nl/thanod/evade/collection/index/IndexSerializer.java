@@ -31,7 +31,7 @@ public class IndexSerializer
 
 	public static void compactIndices(File dir, String name, IndexDescriptor desc, Iterable<? extends Index> indices) throws IOException
 	{
-		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(indices, Index.Entry.VALUE_COMPARE);
+		Iterator<Index.Entry> index = new Sorterator<Index.Entry>(Index.Entry.VALUE_COMPARE, indices);
 
 		// write the final index
 		File file;

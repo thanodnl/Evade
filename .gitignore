@@ -4,3 +4,5 @@ data/
 *.pyc
 .pydevproject
 *.csv
+.metadata/
+.classpath
