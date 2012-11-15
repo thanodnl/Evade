@@ -9,3 +9,4 @@ data/
 .settings/
 .project
 bin/
+.factorypath

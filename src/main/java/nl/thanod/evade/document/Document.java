@@ -51,6 +51,31 @@ public abstract class Document
 		FLOAT(0x15),
 		TUPLE(0x20);
 
+		static class Lookup
+		{
+			static final Type[] lookup = makeLookup();
+
+			private static Type[] makeLookup()
+			{
+				int max = 0;
+				for (Type t : Type.values())
+					max = Math.max(max, t.code);
+				Type[] lookup = new Type[max + 1];
+				for (Type t : Type.values())
+					lookup[t.code] = t;
+				return lookup;
+			}
+
+			public static Type get(int code)
+			{
+				try {
+					return lookup[code];
+				} catch (IndexOutOfBoundsException ball) {
+					return null;
+				}
+			}
+		}
+
 		public final int code;
 
 		private Type(int code)
@@ -60,10 +85,7 @@ public abstract class Document
 
 		public static Type getByCode(int code)
 		{
-			for (Type t : Type.values())
-				if (t.code == code)
-					return t;
-			return null;
+			return Lookup.get(code);
 		}
 	}
 

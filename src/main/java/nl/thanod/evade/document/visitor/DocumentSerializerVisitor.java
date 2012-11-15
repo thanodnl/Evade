@@ -261,59 +261,85 @@ public class DocumentSerializerVisitor extends DocumentVisitor<Void, DataOutput>
 	public Document deserialize(DataInput stream)
 	{
 		try {
-			int code = stream.readByte() & 0xFF;
-			Document.Type type = Document.Type.getByCode(code);
-			long version = 0;
-			switch (type) {
-				case NULL:
-					if (this.versioned)
-						version = stream.readLong();
-					return new NullDocument(version);
-				case STRING:
-					if (this.versioned)
-						version = stream.readLong();
-					return new StringDocument(version, stream.readUTF());
-				case BOOLEAN:
-					if (this.versioned)
-						version = stream.readLong();
-					return new BooleanDocument(version, stream.readByte() != 0);
-				case INTEGER:
-					if (this.versioned)
-						version = stream.readLong();
-					return new IntegerDocument(version, stream.readInt());
-				case LONG:
-					if (this.versioned)
-						version = stream.readLong();
-					return new LongDocument(version, stream.readLong());
-				case UUID:
-					if (this.versioned)
-						version = stream.readLong();
-					return new UUIDDocument(version, new UUID(stream.readLong(), stream.readLong()));
-				case DOUBLE:
-					if (this.versioned)
-						version = stream.readLong();
-					return new DoubleDocument(version, stream.readDouble());
-				case FLOAT:
-					if (this.versioned)
-						version = stream.readLong();
-					return new FloatDocument(version, stream.readFloat());
-				case TUPLE:
-					if (this.versioned)
-						version = stream.readLong();
-					ValueDocument[] docs = new ValueDocument[stream.readInt()];
-					for (int i = 0; i < docs.length; i++)
-						docs[i] = (ValueDocument) DocumentSerializerVisitor.NON_VERSIONED.deserialize(stream);
-					return new TupleDocument(version, docs);
-				case DICT:
-					Map<String, Document> map = new HashMap<String, Document>();
-					while (stream.readByte() != 0)
-						map.put(stream.readUTF(), deserialize(stream));
-					return new DictDocument(map, stream.readLong(), false);
-				default:
-					throw new ProtocolException("unknown type: " + type + " (0x" + Integer.toHexString(code) + ")");
-			}
+			if (this.versioned)
+				return unsafeDeserializeVersioned(stream);
+			else
+				return unsafeDeserializeNonversioned(stream);
 		} catch (IOException ball) {
 			throw new RuntimeException(ball);
+		}
+	}
+
+	private static Document unsafeDeserializeVersioned(DataInput stream) throws IOException, ProtocolException
+	{
+		int code = stream.readByte() & 0xFF;
+		Document.Type type = Document.Type.getByCode(code);
+		switch (type) {
+			case NULL:
+				return new NullDocument(stream.readLong());
+			case STRING:
+				return new StringDocument(stream.readLong(), stream.readUTF());
+			case BOOLEAN:
+				return new BooleanDocument(stream.readLong(), stream.readByte() != 0);
+			case INTEGER:
+				return new IntegerDocument(stream.readLong(), stream.readInt());
+			case LONG:
+				return new LongDocument(stream.readLong(), stream.readLong());
+			case UUID:
+				return new UUIDDocument(stream.readLong(), new UUID(stream.readLong(), stream.readLong()));
+			case DOUBLE:
+				return new DoubleDocument(stream.readLong(), stream.readDouble());
+			case FLOAT:
+				return new FloatDocument(stream.readLong(), stream.readFloat());
+			case TUPLE:
+				long version = stream.readLong();
+				ValueDocument[] docs = new ValueDocument[stream.readInt()];
+				for (int i = 0; i < docs.length; i++)
+					docs[i] = (ValueDocument) unsafeDeserializeNonversioned(stream);
+				return new TupleDocument(version, docs);
+			case DICT:
+				Map<String, Document> map = new HashMap<String, Document>();
+				while (stream.readByte() != 0)
+					map.put(stream.readUTF(), unsafeDeserializeVersioned(stream));
+				return new DictDocument(map, stream.readLong(), false);
+			default:
+				throw new ProtocolException("unknown type: " + type + " (0x" + Integer.toHexString(code) + ")");
+		}
+	}
+
+	private static Document unsafeDeserializeNonversioned(DataInput stream) throws IOException, ProtocolException
+	{
+		int code = stream.readByte() & 0xFF;
+		Document.Type type = Document.Type.getByCode(code);
+		switch (type) {
+			case NULL:
+				return new NullDocument(0);
+			case STRING:
+				return new StringDocument(0, stream.readUTF());
+			case BOOLEAN:
+				return new BooleanDocument(0, stream.readByte() != 0);
+			case INTEGER:
+				return new IntegerDocument(0, stream.readInt());
+			case LONG:
+				return new LongDocument(0, stream.readLong());
+			case UUID:
+				return new UUIDDocument(0, new UUID(stream.readLong(), stream.readLong()));
+			case DOUBLE:
+				return new DoubleDocument(0, stream.readDouble());
+			case FLOAT:
+				return new FloatDocument(0, stream.readFloat());
+			case TUPLE:
+				ValueDocument[] docs = new ValueDocument[stream.readInt()];
+				for (int i = 0; i < docs.length; i++)
+					docs[i] = (ValueDocument) unsafeDeserializeNonversioned(stream);
+				return new TupleDocument(0, docs);
+			case DICT:
+				Map<String, Document> map = new HashMap<String, Document>();
+				while (stream.readByte() != 0)
+					map.put(stream.readUTF(), unsafeDeserializeNonversioned(stream));
+				return new DictDocument(map, stream.readLong(), false);
+			default:
+				throw new ProtocolException("unknown type: " + type + " (0x" + Integer.toHexString(code) + ")");
 		}
 	}
 
