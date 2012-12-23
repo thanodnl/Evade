@@ -93,10 +93,7 @@ public class JSONRemote extends Remote
 
 				String collection;
 				Table table;
-				
-				
-				
-				
+
 				switch (mode) {
 					case PERSIST:
 						collection = jso.getString("collection");
@@ -236,17 +233,7 @@ public class JSONRemote extends Remote
 	private boolean where(Socket s, JSONObject jso, int sessionid) throws JSONException, IOException
 	{
 		String collection = jso.getString("collection");
-		
 
-		
-
-//		Table table = db.getCollection(collection);
-//		if (table == null) {
-//			send(s, createError("No such collection (" + collection + ")", sessionid));
-//			return false;
-//		}
-		
-		
 		JSONArray query = null;
 		try {
 			query = jso.getJSONArray("query");
@@ -263,8 +250,7 @@ public class JSONRemote extends Remote
 		String field = query.getString(0);
 		String content = query.getString(1);
 		DocumentPath path = new DocumentPath(field);
-		
-		
+
 		Query q = new Query(collection, path, content);
 		Iterable<Index.Entry> solve;
 		try {
@@ -273,9 +259,9 @@ public class JSONRemote extends Remote
 			send(s, createError("No valid index for: " + q.path, sessionid));
 			return false;
 		}
-		
+
 		int count = 0;
-		for (Index.Entry e : solve){
+		for (Index.Entry e : solve) {
 			JSONObject response = new JSONObject();
 			response.put("session", sessionid);
 			Document doc = db.getCollection(q.collection).get(e.id);
@@ -284,13 +270,6 @@ public class JSONRemote extends Remote
 			send(s, response);
 			count++;
 		}
-		
-
-//		int limit = 0;
-//		if (jso.has("limit"))
-//			limit = jso.getInt("limit");
-
-
 
 		JSONObject response = new JSONObject();
 		response.put("session", sessionid);
