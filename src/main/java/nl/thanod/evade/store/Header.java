@@ -172,6 +172,7 @@ public class Header
 		return ih;
 	}
 
+	@Deprecated
 	public void write(DataOutput out) throws IOException
 	{
 		out.writeInt(count);
@@ -225,8 +226,10 @@ public class Header
 		dos.writeInt(this.version);
 
 		// from version 2
-		dos.writeLong(this.uncompressed);
-		dos.writeLong(this.compressed);
+		if (this.version >= 2) {
+			dos.writeLong(this.uncompressed);
+			dos.writeLong(this.compressed);
+		}
 
 		// all older versions
 		Entry e = this.first;

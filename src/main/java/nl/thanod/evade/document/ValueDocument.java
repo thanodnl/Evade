@@ -5,6 +5,8 @@ package nl.thanod.evade.document;
 
 import java.util.Comparator;
 
+import nl.thanod.evade.document.visitor.ValueDocumentVisitor;
+
 /**
  * @author nilsdijk
  */
@@ -49,4 +51,11 @@ public abstract class ValueDocument extends Document
 	 * @return
 	 */
 	protected abstract String valueString();
+
+	public static ValueDocument from(Document doc)
+	{
+		if (doc == null)
+			return null;
+		return doc.accept(ValueDocumentVisitor.VALUE, null);
+	}
 }
