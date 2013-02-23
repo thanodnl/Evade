@@ -18,7 +18,7 @@ public class Compacter
 	{
 		DatabaseConfiguration conf = new DatabaseConfiguration();
 		conf.datadir = new File("data");
-		
+
 		Database db = conf.loadDatabase();
 		db.getCollection("github_small").majorCompact(null);
 	}

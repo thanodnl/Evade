@@ -303,6 +303,8 @@ public class SSTable extends DocumentCollection implements Closeable
 
 	public static List<File> save(File datadir, String name, Iterable<Document.Entry> data, int maxdatasize) throws FileNotFoundException, IOException
 	{
+		boolean useCompress = false;
+
 		if (!datadir.exists()) {
 			if (!datadir.mkdirs()) {
 				throw new IOException("Could not make parent directories to " + datadir);
@@ -333,10 +335,14 @@ public class SSTable extends DocumentCollection implements Closeable
 			Header header = new Header(2);
 
 			long offset = raf.getFilePointer();
-			header.put(Header.Type.DATA, offset, Header.Flags.LZF);
 
-			header.uncompressed = 0;
-			header.compressed = 0;
+			if (useCompress) {
+				header.put(Header.Type.DATA, offset, Header.Flags.LZF);
+				header.uncompressed = 0;
+				header.compressed = 0;
+			} else {
+				header.put(Header.Type.DATA, offset);
+			}
 
 			// write the datablob
 			while (it.hasNext() && raf.getFilePointer() < maxdatasize) {
@@ -350,16 +356,22 @@ public class SSTable extends DocumentCollection implements Closeable
 				// serialize document
 				e.doc.accept(DocumentSerializerVisitor.VERSIONED, dos);
 
-				// compress the data
-				byte[] orig = bos.toByteArray();
-				byte[] comp = LZFEncoder.encode(orig);
+				byte[] bytes = bos.toByteArray();
 
-				// count the bytes
-				header.uncompressed += orig.length;
-				header.compressed += comp.length;
+				if (useCompress) {
+					// compress the data
+					byte[] comp = LZFEncoder.encode(bytes);
+
+					// count the bytes
+					header.uncompressed += bytes.length;
+					header.compressed += comp.length;
+
+					// swap the bytes written with the compressed ones
+					bytes = comp;
+				}
 
 				// write the compressed data to the file
-				raf.write(comp);
+				raf.write(bytes);
 				bos.reset();
 			}
 
