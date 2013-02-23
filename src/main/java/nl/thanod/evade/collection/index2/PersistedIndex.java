@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 import nl.thanod.evade.collection.Table;
 import nl.thanod.evade.collection.index.IndexDescriptor;
 import nl.thanod.evade.collection.index.OffsetTable;
+import nl.thanod.evade.collection.index.OffsetTable.OffsetTableEntry;
 import nl.thanod.evade.collection.index.Search;
 import nl.thanod.evade.collection.index.Search.Searchable;
 import nl.thanod.evade.database.Database;
@@ -28,8 +29,36 @@ public class PersistedIndex implements Searchable<IndexEntry>
 {
 	public final IndexDescriptor desc;
 
-	private final ByteBuffer data;
-	private final OffsetTable offsets;
+	protected final ByteBuffer data;
+	protected final OffsetTable keyoffsets;
+	protected final OffsetTable idoffsets;
+
+	public class ReverseIndex implements Searchable<IDEntry>
+	{
+		final ByteBuffer content = data.duplicate();
+		final ByteBufferDataInput reader = new ByteBufferDataInput(content);
+
+		@Override
+		public IDEntry get(final int index)
+		{
+			content.position(PersistedIndex.this.idoffsets.offset(index));
+			ValueDocument id = (ValueDocument) DocumentSerializerVisitor.VERSIONED.deserialize(reader);
+			return new IDEntry(id) {
+				@Override
+				public IndexEntry getParent()
+				{
+					OffsetTableEntry r = Search.after(PersistedIndex.this.keyoffsets, OffsetTable.OffsetTableEntry.search(PersistedIndex.this.idoffsets.offset(index)));
+					return PersistedIndex.this.get(r.index);
+				}
+			};
+		}
+
+		@Override
+		public int count()
+		{
+			return PersistedIndex.this.idoffsets.count();
+		}
+	}
 
 	public PersistedIndex(File file) throws IOException
 	{
@@ -40,7 +69,8 @@ public class PersistedIndex implements Searchable<IndexEntry>
 		ByteBufferDataInput descin = new ByteBufferDataInput(header.map(raf, Header.Type.INDEX_DESC));
 		this.desc = IndexDescriptor.deserialize(DocumentSerializerVisitor.NON_VERSIONED.deserialize(descin));
 
-		this.offsets = new OffsetTable(header.map(raf, Header.Type.SORTED_INDEX));
+		this.keyoffsets = new OffsetTable(header.map(raf, Header.Type.SORTED_INDEX));
+		this.idoffsets = new OffsetTable(header.map(raf, Header.Type.UUID_INDEX));
 		this.data = header.map(raf, Header.Type.DATA);
 
 		raf.close();
@@ -51,11 +81,11 @@ public class PersistedIndex implements Searchable<IndexEntry>
 	{
 		// prepare the content
 		final ByteBuffer content = this.data.duplicate();
-		content.position(this.offsets.offset(index));
+		content.position(this.keyoffsets.offset(index));
 
 		// change the limit except for the last block
-		if (index + 1 < this.offsets.count())
-			content.limit(this.offsets.offset(index + 1));
+		if (index + 1 < this.keyoffsets.count())
+			content.limit(this.keyoffsets.offset(index + 1));
 
 		final ByteBufferDataInput reader = new ByteBufferDataInput(content);
 		ValueDocument key = (ValueDocument) DocumentSerializerVisitor.NON_VERSIONED.deserialize(reader);
@@ -92,7 +122,7 @@ public class PersistedIndex implements Searchable<IndexEntry>
 	@Override
 	public int count()
 	{
-		return this.offsets.count();
+		return this.keyoffsets.count();
 	}
 
 	public static void main(String[] args) throws IOException
@@ -102,23 +132,42 @@ public class PersistedIndex implements Searchable<IndexEntry>
 		Database db = conf.loadDatabase();
 		Table t = db.getCollection("github_small");
 
-		PersistedIndex pi = new PersistedIndex(new File("/Users/nilsdijk/Documents/workspace/Evade/data/github_small_name.idx"));
+		PersistedIndex pi = new PersistedIndex(new File("data/eva_4784925109453924832.idx"));
 		IndexEntry result;
 
-		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("koenbollen")));
-		System.out.println(result.index + ": " + result.key);
-
-		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("thanodnl")));
-		System.out.println(result.index + ": " + result.key);
-
-		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("floort")));
-		System.out.println(result.index + ": " + result.key);
+		//		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("koenbollen")));
+		//		System.out.println(result.index + ": " + result.key);
+		//
+		//		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("thanodnl")));
+		//		System.out.println(result.index + ": " + result.key);
+		//
+		//		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("floort")));
+		//		System.out.println(result.index + ": " + result.key );
 
 		result = Search.binsearch(pi, IndexEntry.compare(new StringDocument("jorisdormans")));
 		System.out.println(result.index + ": " + result.key);
 
+		UUIDDocument last = null;
 		for (UUIDDocument uuiddoc : result) {
-			System.out.println(t.get(uuiddoc.value));
+			last = uuiddoc;
+			System.out.println(uuiddoc.value + ": " + t.get(uuiddoc.value));
 		}
+
+		if (last != null) {
+			IDEntry r = Search.binsearch(pi.getReverseIndex(), IDEntry.search(last));
+			System.out.println(r.id);
+
+			result = r.getParent();
+			System.out.println(result.index + ": " + result.key);
+			for (UUIDDocument uuiddoc : result) {
+				last = uuiddoc;
+				System.out.println(uuiddoc.value + ": " + t.get(uuiddoc.value));
+			}
+		}
+	}
+
+	private ReverseIndex getReverseIndex()
+	{
+		return new ReverseIndex();
 	}
 }
